@@ -1,9 +1,10 @@
 {
+    "replica_id" : "karl/waqar/nick",
     "sequence_id" : "",
     "response_details" : {
         "method_name" : "removeItem",
-        "message" : "",
-        "status_code" : "",
+        "message" : "managerID removal quantity x itemID",
+        "status_code" : "successful/failed",
         "parameters" : {
             "managerID" : "",
             "itemID" : "",

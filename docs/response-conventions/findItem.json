@@ -1,13 +1,14 @@
 {
+    "replica_id" : "karl/waqar/nick",
     "sequence_id" : "",
     "response_details" : {
         "method_name" : "findItem",
-        "message" : "",
-        "status_code" : "",
+        "message" : "(itemID-quantity-price),(itemID-quantity-price),(itemID-quantity-price)",
+        "status_code" : "successful/failed",
         "parameters" : {
             "customerID" : "",
             "itemName" : "",
-            "found_items" : ""
+            "found_items" : ["itemID-quantity-price", "itemID-quantity-price", "itemID-quantity-price"]
         }
     }
 }

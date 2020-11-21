@@ -1,9 +1,10 @@
 {
+    "replica_id" : "karl/waqar/nick",
     "sequence_id" : "",
     "response_details" : {
         "method_name" : "addItem",
-        "message" : "",
-        "status_code" : "",
+        "message" : "managerID add (itemID,itemName,quantity,price)",
+        "status_code" : "successful/failed",
         "parameters" : {
             "managerID" : "",
             "itemID" : "",
