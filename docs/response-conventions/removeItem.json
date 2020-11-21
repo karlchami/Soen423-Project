@@ -1,0 +1,13 @@
+{
+    "sequence_id" : "",
+    "response_details" : {
+        "method_name" : "removeItem",
+        "message" : "",
+        "status_code" : "",
+        "parameters" : {
+            "managerID" : "",
+            "itemID" : "",
+            "quantity" : ""
+        }
+    }
+}

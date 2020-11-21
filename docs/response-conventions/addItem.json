@@ -1,0 +1,15 @@
+{
+    "sequence_id" : "",
+    "response_details" : {
+        "method_name" : "addItem",
+        "message" : "",
+        "status_code" : "",
+        "parameters" : {
+            "managerID" : "",
+            "itemID" : "",
+            "itemName" : "",
+            "quantity" : "",
+            "price" : ""
+        }
+    }
+}

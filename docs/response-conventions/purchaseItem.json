@@ -1,0 +1,13 @@
+{
+    "sequence_id" : "",
+    "response_details" : {
+        "method_name" : "purchaseItem",
+        "message" : "",
+        "status_code" : "",
+        "parameters" : {
+            "customerID" : "",
+            "itemID" : "",
+            "dateOfPurchase" : ""
+        }
+    }
+}

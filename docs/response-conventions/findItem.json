@@ -1,0 +1,13 @@
+{
+    "sequence_id" : "",
+    "response_details" : {
+        "method_name" : "findItem",
+        "message" : "",
+        "status_code" : "",
+        "parameters" : {
+            "customerID" : "",
+            "itemName" : "",
+            "found_items" : ""
+        }
+    }
+}

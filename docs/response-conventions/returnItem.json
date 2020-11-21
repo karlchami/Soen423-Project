@@ -1,0 +1,13 @@
+{
+    "sequence_id" : "",
+    "response_details" : {
+        "method_name" : "returnItem",
+        "message" : "",
+        "status_code" : "",
+        "parameters" : {
+            "customerID" : "",
+            "itemID" : "",
+            "dateOfReturn" : ""
+        }
+    }
+}

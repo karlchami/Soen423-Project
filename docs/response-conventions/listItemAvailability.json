@@ -1,0 +1,12 @@
+{
+    "sequence_id" : "",
+    "response_details" : {
+        "method_name" : "listItemAvailability",
+        "message" : "",
+        "status_code" : "",
+        "parameters" : {
+            "managerID" : "",
+            "available_items" : ""
+        }
+    }
+}
