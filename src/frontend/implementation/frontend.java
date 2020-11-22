@@ -68,22 +68,22 @@ public class frontend extends frontendPOA  {
 		return null;
 	}
 		
-    public Logger startLogger(String frontend_id) {
-        Logger logger = Logger.getLogger("frontend-log");
-        FileHandler fh;
-        try {
-            fh = new FileHandler("logs/frontend/" + frontend_id + ".log");
-            logger.addHandler(fh);
-            SimpleFormatter formatter = new SimpleFormatter();
-            fh.setFormatter(formatter);
-
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return logger;
-    }
+	public Logger startLogger(String frontend_id) {
+	    Logger logger = Logger.getLogger("frontend-log");
+	    FileHandler fh;
+	    try {
+	        fh = new FileHandler("logs/frontend/" + frontend_id + ".log");
+	        logger.addHandler(fh);
+	        SimpleFormatter formatter = new SimpleFormatter();
+	        fh.setFormatter(formatter);
+	
+	    } catch (SecurityException e) {
+	        e.printStackTrace();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	    return logger;
+	}
     
 	public void shutdown() {
 		this.orb.shutdown(false);
