@@ -1,26 +1,24 @@
-package Models.FindItem;
+package Models.response;
 
-import Models.AddItem.AddItemParameters;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-public class FindItemResponseDetails {
-
+public class ResponseDetails {
     private String method_name;
     private String message;
     private String status_code;
-    private FindItemParameters parameters;
 
-    public FindItemResponseDetails(String JSONString)
-    {
-        try{
+    public ResponseDetails(String JSONString) {
+        try {
             JSONParser jp = new JSONParser();
             JSONObject JObject = (JSONObject) jp.parse(JSONString);
             this.method_name = JObject.get("method_name").toString();
             this.message = JObject.get("message").toString();
             this.status_code = JObject.get("status_code").toString();
-            this.parameters = new FindItemParameters(JObject.get("parameters").toString());
-        }catch (Exception e){e.printStackTrace();}
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public String getMethod_name() {
@@ -45,13 +43,5 @@ public class FindItemResponseDetails {
 
     public void setStatus_code(String status_code) {
         this.status_code = status_code;
-    }
-
-    public FindItemParameters getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(FindItemParameters parameters) {
-        this.parameters = parameters;
     }
 }
