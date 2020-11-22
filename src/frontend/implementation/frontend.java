@@ -36,9 +36,9 @@ public class frontend extends frontendPOA  {
 			log.info("Frontend started on port " + port);	
 	}
 	
-    public String addItem(String managerID, String itemID, String itemName, int quantity, int price) {
+	public String addItem(String managerID, String itemID, String itemName, int quantity, int price) {
 		return null;
-    }
+	}
 
 	public String removeItem(String managerID, String itemID, int quantity) {
 		return null;
