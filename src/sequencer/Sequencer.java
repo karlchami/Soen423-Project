@@ -4,11 +4,8 @@ import Models.request.Request;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.net.*;
 
-import java.net.InetAddress;
-import java.net.SocketException;
 import java.util.ArrayList;
 
 public class Sequencer {
@@ -20,11 +17,38 @@ public class Sequencer {
 
     public static void main(String[] args) {
         try {
-            group = InetAddress.getByName("230.4.4.4");
-            socket = new DatagramSocket(4444);
+            group = InetAddress.getByName("230.4.4.5");
+            socket = new MulticastSocket(4444);
 
+            String s = "{\n" +
+                    "    \"replica_id\" : \"karl/waqar/nick\",\n" +
+                    "    \"sequence_id\" : -1,\n" +
+                    "    \"store\" : \"QC\",\n" +
+                    "    \"response_details\" : {\n" +
+                    "        \"method_name\" : \"returnItem\",\n" +
+                    "        \"message\" : \"customerID return of itemID on dateOfReturn\",\n" +
+                    "        \"status_code\" : \"successful/failed\",\n" +
+                    "        \"parameters\" : {\n" +
+                    "            \"customerID\" : \"QCU1001\",\n" +
+                    "            \"itemID\" : \"QC1023\",\n" +
+                    "            \"dateOfReturn\" : \"20112020\"\n" +
+                    "        }\n" +
+                    "    }\n" +
+                    "}";
+
+            Thread.sleep(250);
+            int i = 0;
             while (true) {
-                forwardRequest();
+//                forwardRequest();
+                if (i==4){
+                    multicastRequest("KILL");
+                    Thread.sleep(41000);
+                }
+                i++;
+                System.out.println("Sent");
+                multicastRequest(s);
+                Thread.sleep(1250);
+
             }
         } catch (Exception e) {
             e.printStackTrace();

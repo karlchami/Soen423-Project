@@ -1,7 +1,9 @@
 package replica.replica_waqar.server_waqar;
 
-import ServerImpl.ONCommandsImpl;
 
+import Models.request.Request;
+import replica.replica_waqar.ServerImpl.ONCommandsImpl;
+import replica.replica_waqar.ServerImpl.QCCommandsImpl;
 
 import javax.xml.ws.Endpoint;
 import java.rmi.*;
@@ -10,39 +12,32 @@ import java.rmi.registry.LocateRegistry;
 import java.net.*;
 
 public class ONServer {
+
+    public static DatagramSocket socket = null;
+    public static DatagramSocket RMsocket = null;
+
     public static void main(String args[]){
         try{
-//            ORB orb = ORB.init(args, null);
-//
-//            POA rootPOA = (POA) orb.resolve_initial_references("RootPOA");
-//            rootPOA.the_POAManager().activate();
-//
-//            ONCommandsImpl store = new ONCommandsImpl();
-//            Object ref = rootPOA.servant_to_reference(store);
-//            Store corbaRef = StoreHelper.narrow(ref);
-//
-//            Object objRef = orb.resolve_initial_references("NameService");
-//            NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
-//
-//            NameComponent[] path = ncRef.to_name("ON");
-//            ncRef.rebind(path, corbaRef);
-//
-//
-//            Runnable task = () -> {
-//                receive(store);
-//            };
-//            Thread thread = new Thread(task);
-//            thread.start();
-//
-//            orb.run();
 
+            System.out.println("Starting ON Server");
             ONCommandsImpl store = new ONCommandsImpl();
-            Endpoint endpoint = Endpoint.publish("http://localhost:8200/ONStore", store);
+
             Runnable task = () -> {
                 receive(store);
             };
             Thread thread = new Thread(task);
             thread.start();
+
+            Runnable task2 = () -> {
+                receiveFromRM(store);
+            };
+            Thread thread2 = new Thread(task2);
+            thread2.start();
+
+
+            while(true){
+                Thread.sleep(2500);
+            }
         }
         catch (Exception e) {
         }
@@ -61,7 +56,6 @@ public class ONServer {
 
 
     private static void receive(ONCommandsImpl obj) {
-        DatagramSocket socket = null;
         String returnMessage = "";
         try {
             socket = new DatagramSocket(2001);
@@ -70,6 +64,7 @@ public class ONServer {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 socket.receive(request);
                 String sentence = new String( request.getData(), request.getOffset(), request.getLength()).trim();
+
                 String[] split = sentence.split("-");
                 //action+"-"+username+"-"+itemId+"-"+cost
                 System.out.println("Function Received " + split[0]);
@@ -119,6 +114,63 @@ public class ONServer {
         } finally {
             if (socket != null)
                 socket.close();
+        }
+    }
+
+    private static void receiveFromRM(ONCommandsImpl obj) {
+
+        String returnMessage = "";
+        try {
+            RMsocket = new DatagramSocket(3001);
+            byte[] buffer = new byte[1000];
+            while (true) {
+                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+                RMsocket.receive(request);
+                String sentence = new String( request.getData(), request.getOffset(), request.getLength()).trim();
+                System.out.println(sentence);
+
+                if(sentence.equals("Exit")){
+                    System.out.println("Killing ON Server");
+                    returnMessage = "ON IS DEAD";
+                    byte[] sendData = returnMessage.getBytes();
+                    DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
+                            request.getPort());
+                    RMsocket.send(reply);
+                    RMsocket.close();
+                    socket.close();
+                    RMsocket = null;
+                    socket = null;
+                    return;
+                }
+                if(sentence.equals("Heartbeat")){
+                    returnMessage = "TRUE";
+                    byte[] sendData = returnMessage.getBytes();
+                    DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
+                            request.getPort());
+                    RMsocket.send(reply);
+                    RMsocket.close();
+                    return;
+                }
+                Request dumbo = new Request(sentence);
+                System.out.println(dumbo.getStore());
+                if(dumbo.getRequestDetails().getMethod_name().equals("returnItem")){
+                    returnMessage = obj.returnItem(
+                            dumbo.getRequestDetails().getParameters().get("customerID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("itemID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("dateOfReturn").toString());
+                }
+                System.out.println("The end!");
+                byte[] sendData = returnMessage.getBytes();
+                DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
+                        request.getPort());
+                RMsocket.send(reply);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+            e.printStackTrace();
+        } finally {
+            if (RMsocket != null)
+                RMsocket.close();
         }
     }
 

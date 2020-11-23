@@ -1,18 +1,7 @@
 package manager;
 
 
-
-import Models.AddItem.AddItem;
-import Models.Exchange.ExchangeItem;
-import Models.FindItem.FindItem;
-import Models.ListItem.ListItem;
-import Models.PurchaseItem.PurchaseItem;
-import Models.RemoveItem.RemoveItem;
-import Models.ReturnItem.ReturnItem;
-import Models.waitlist.AddCustomerWaitlist;
-import com.google.gson.Gson;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import Models.request.Request;
 import replica.replica_waqar.server_waqar.BCServer;
 import replica.replica_waqar.server_waqar.ONServer;
 import replica.replica_waqar.server_waqar.QCServer;
@@ -21,9 +10,9 @@ import replica.replica_waqar.server_waqar.QCServer;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
-
 
 
 public class ReplicaManager {
@@ -33,29 +22,26 @@ public class ReplicaManager {
     public static Thread ON;
     public static Thread BC;
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
 
-        try{
-            startBC();
-            parseJSON();
-
+        try {
+            startAll();
             received_commands = new ArrayList<String>();
             Runnable task = () -> {
-                receive();
+                receive_multicast();
             };
             Thread thread = new Thread(task);
             thread.start();
 
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
         }
 
 
     }
 
 
-    private static void startBC(){
+    private static void startBC() {
         Runnable task = () -> {
             try {
                 String[] args = new String[1];
@@ -69,7 +55,7 @@ public class ReplicaManager {
 
     }
 
-    private static void startON(){
+    private static void startON() {
         Runnable task = () -> {
             try {
                 String[] args = new String[1];
@@ -82,7 +68,7 @@ public class ReplicaManager {
         ON.start();
     }
 
-    private static void startQC(){
+    private static void startQC() {
         Runnable task = () -> {
             try {
                 String[] args = new String[1];
@@ -95,12 +81,76 @@ public class ReplicaManager {
         QC.start();
     }
 
-    public static boolean heartbeat(){
-        return true;
+    public static void endQCThread() {
+        EndServerUDP(3003, "Exit");
+        try {
+            while (!QC.isInterrupted() && QC.isAlive()) {
+                QC.interrupt();
+            }
+        } catch (Exception consumed) {
+
+        }
+    }
+
+    public static void endBCThread() {
+        EndServerUDP(3002, "Exit");
+        try {
+            while (!BC.isInterrupted() && BC.isAlive()) {
+                BC.interrupt();
+            }
+        } catch (Exception consumed) {
+            consumed.printStackTrace();
+        }
+    }
+
+    public static void endONThread() {
+        EndServerUDP(3001, "Exit");
+        try {
+            while (!ON.isInterrupted() && ON.isAlive()) {
+                ON.interrupt();
+            }
+        } catch (Exception consumed) {
+
+        }
+    }
+
+    public static void startAll() throws InterruptedException {
+        Thread.sleep(1500);
+        startBC();
+        Thread.sleep(1500);
+        startON();
+        Thread.sleep(1500);
+        startQC();
+    }
+
+    public static void restartAll() throws InterruptedException {
+        Thread.sleep(1500);
+        endQCThread();
+        Thread.sleep(1500);
+        endBCThread();
+        Thread.sleep(1500);
+        endONThread();
+        startAll();
+        Thread.sleep(3500);
+        System.out.println("RESTARTED");
+    }
+
+    public static boolean heartbeat(String StorePrefix) {
+        String status = "";
+        System.out.println("Prefix check :" + StorePrefix.equals("QC"));
+        if (StorePrefix.equals("ON"))
+            status = sendUDP(2001, "Heartbeat").trim();
+        if (StorePrefix.equals("BC"))
+            status = sendUDP(2002, "Heartbeat").trim();
+        if (StorePrefix.equals("QC"))
+            status = sendUDP(2003, "Heartbeat").trim();
+        if (status.equals("TRUE"))
+            return true;
+        return false;
 
     }
 
-    public static void parseJSON(){
+    public static void parseJSON() {
         try {
             String testString = "{\n" +
                     "    \"replica_id\" : \"karl/waqar/nick\",\n" +
@@ -121,79 +171,99 @@ public class ReplicaManager {
             testSeperate(testString);
 
 
-
-
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void testSeperate(String JSONString){
+    public static void testSeperate(String JSONString) {
         try {
-            JSONParser jp = new JSONParser();
-            JSONObject JObject = (JSONObject) jp.parse(JSONString);
-            JSONObject JObject2 = (JSONObject) JObject.get("response_details");
-            String method = JObject2.get("method_name").toString();
-            if(method.equals("addItem")){
-                AddItem item = new AddItem(JSONString);
-                //Do Whatever
-            }
-            if(method.equals("addCustomerWaitlist")){
-                AddCustomerWaitlist item = new AddCustomerWaitlist(JSONString);
-                //Do Whatever
-            }
-            if(method.equals("exchangeItem")){
-                ExchangeItem item = new ExchangeItem(JSONString);
-            }
-            if(method.equals("findItem")){
-                FindItem item = new FindItem(JSONString);
-                //Do Whatever
-            }
-            if(method.equals("listItemAvailability")){
-                ListItem item = new ListItem(JSONString);
-                //Do Whatever
-            }
-            if(method.equals("purchaseItem")){
-                PurchaseItem item = new PurchaseItem(JSONString);
-                //Do Whatever
-            }
-            if(method.equals("removeItem")){
-                RemoveItem item = new RemoveItem(JSONString);
-                //Do Whatever
-            }
-            if(method.equals("returnItem")){
-                ReturnItem item = new ReturnItem(JSONString);
-                System.out.println(item.getResponseDetails().getParameters().getDateOfReturn());
-                System.out.println(item.getResponseDetails().getParameters().getCustomerID());
-                System.out.println(item.getResponseDetails().getParameters().getItemID());
-                //Do Whatever
-            }
+            Request request = new Request(JSONString);
+            System.out.println(request.getRequestDetails().getMethod_name());
 
-        }catch (Exception e){e.printStackTrace();}
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
+    public static void resendMessages(){
+        for(int i=0; i<received_commands.size();i++) {
+            String sentence = received_commands.get(i);
+            Request dumbo = new Request(sentence);
+            if (dumbo.getStore().equals("QC")) {
+                System.out.println("Resent");;
+                System.out.println(sendUDP(3003, sentence));
+            }
+            if (dumbo.getStore().equals("BC")) {
+                sendUDP(3002, sentence);
+            }
+            if (dumbo.getStore().equals("ON")) {
+                sendUDP(3001, sentence);
+            }
+        }
+    }
 
+
+    private static void receive_multicast() {
+        MulticastSocket socket = null;
+        String returnMessage = "";
+        try {
+            socket = new MulticastSocket(4444);
+            socket.joinGroup(InetAddress.getByName("230.4.4.5"));
+            byte[] buffer = new byte[1000];
+            while (true) {
+                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+                socket.receive(request);
+                String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
+//                System.out.println("Received : " + sentence);
+                if (sentence.equals("KILL")) {
+                    restartAll();
+                    resendMessages();
+                    continue;
+                }
+                Request dumbo = new Request(sentence);
+                received_commands.add(sentence);
+                if(dumbo.getStore().equals("QC")){
+                    System.out.println(sendUDP(3003, sentence));
+                }
+                if(dumbo.getStore().equals("BC")){
+                    sendUDP(3002, sentence);
+                }
+                if(dumbo.getStore().equals("ON")){
+                    sendUDP(3001, sentence);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+            e.printStackTrace();
+        } finally {
+            if (socket != null)
+                socket.close();
+        }
+    }
 
     private static void receive() {
         DatagramSocket socket = null;
         String returnMessage = "";
         try {
-            socket = new DatagramSocket(2002);
+            socket = new DatagramSocket(2004);
             byte[] buffer = new byte[1000];
             while (true) {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 socket.receive(request);
-                String sentence = new String( request.getData(), request.getOffset(), request.getLength()).trim();
+                String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
                 String[] split = sentence.split("-");
                 //action+"-"+username+"-"+itemId+"-"+cost"-"+oldItem
                 System.out.println("Function Received " + split[0]);
-                if(split[0].equals("Restart")) {
+                if (split[0].equals("Restart")) {
 
                 }
-                if(split[0].equals("SendForward")) {
+                if (split[0].equals("SendForward")) {
 
-                }if(split[0].equals("GetMessage")) {
+                }
+                if (split[0].equals("GetMessage")) {
 
                 }
                 byte[] sendData = returnMessage.getBytes();
@@ -211,35 +281,47 @@ public class ReplicaManager {
     }
 
 
-    private static String sendUDP(int port, String username, String itemId, String action, int cost, String oldItem) {
+    private static String sendUDP(int port, String UDPMessage) {
         DatagramSocket socket = null;
-        String UDPMessage = action+"-"+username+"-"+itemId+"-"+cost+"-" +oldItem;
-        String result="";
+        String result = "";
         try {
-            result ="";
+            result = "";
             socket = new DatagramSocket();
+            socket.setSoTimeout(27000);
             byte[] messageToSend = UDPMessage.getBytes();
             InetAddress hostName = InetAddress.getByName("localhost");
             DatagramPacket request = new DatagramPacket(messageToSend, UDPMessage.length(), hostName, port);
             socket.send(request);
-
             byte[] bf = new byte[256];
             DatagramPacket reply = new DatagramPacket(bf, bf.length);
             socket.receive(reply);
             result = new String(reply.getData());
-            // String[] parts = result.split("-");
-            // result = parts[0];
         } catch (Exception e) {
             System.out.println(e);
         } finally {
             if (socket != null)
                 socket.close();
         }
-        return result;
+        return result.trim();
 
     }
 
 
+    private static void EndServerUDP(int port, String UDPMessage) {
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket();
+            byte[] messageToSend = UDPMessage.getBytes();
+            InetAddress hostName = InetAddress.getByName("localhost");
+            DatagramPacket request = new DatagramPacket(messageToSend, UDPMessage.length(), hostName, port);
+            socket.send(request);
+        } catch (Exception e) {
+            System.out.println(e);
+        } finally {
+            if (socket != null)
+                socket.close();
+        }
+    }
 
 
 }

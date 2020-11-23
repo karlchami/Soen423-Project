@@ -7,6 +7,7 @@ import org.json.simple.parser.JSONParser;
 public class Request {
     private int sequence_id;
     private String replica_id;
+    private String store;
     private RequestDetails requestDetails;
 
     public Request(String JSONString) {
@@ -16,9 +17,18 @@ public class Request {
             this.requestDetails = new RequestDetails(JObject.get("response_details").toString());
             this.sequence_id = Integer.parseInt(JObject.get("sequence_id").toString());
             this.replica_id = JObject.get("replica_id").toString();
+            this.store = JObject.get("store").toString();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String getStore() {
+        return store;
+    }
+
+    public void setStore(String store) {
+        this.store = store;
     }
 
     public int getSequence_id() {

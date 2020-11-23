@@ -1,6 +1,7 @@
 package replica.replica_waqar.server_waqar;
 
-import ServerImpl.QCCommandsImpl;
+import Models.request.Request;
+import replica.replica_waqar.ServerImpl.QCCommandsImpl;
 
 import javax.xml.ws.Endpoint;
 import java.rmi.*;
@@ -9,38 +10,29 @@ import java.rmi.registry.LocateRegistry;
 import java.net.*;
 
 public class QCServer {
+    public static DatagramSocket socket = null;
+    public static DatagramSocket RMsocket = null;
     public static void main(String args[]){
         try{
-//            ORB orb = ORB.init(args, null);
-//
-//            POA rootPOA = (POA) orb.resolve_initial_references("RootPOA");
-//            rootPOA.the_POAManager().activate();
-//
-//            QCCommandsImpl store = new QCCommandsImpl();
-//            Object ref = rootPOA.servant_to_reference(store);
-//            Store corbaRef = StoreHelper.narrow(ref);
-//
-//            Object objRef = orb.resolve_initial_references("NameService");
-//            NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
-//
-//            NameComponent[] path = ncRef.to_name("QC");
-//            ncRef.rebind(path, corbaRef);
-//
-//
-//            Runnable task = () -> {
-//                receive(store);
-//            };
-//            Thread thread = new Thread(task);
-//            thread.start();
-//
-//            orb.run();
+
+            System.out.println("Starting QC Server");
             QCCommandsImpl store = new QCCommandsImpl();
-            Endpoint endpoint = Endpoint.publish("http://localhost:8300/QCStore", store);
+
             Runnable task = () -> {
-                receive(store);
+                    receive(store);
             };
             Thread thread = new Thread(task);
             thread.start();
+
+            Runnable task2 = () -> {
+                receiveFromRM(store);
+            };
+            Thread thread2 = new Thread(task2);
+            thread2.start();
+
+           while(true){
+               Thread.sleep(2500);
+            }
         }
         catch (Exception e) {
         }
@@ -48,18 +40,10 @@ public class QCServer {
 
     }
 
-    public static void startTheRegistry() throws RemoteException{
-        try {
-            Registry registry = LocateRegistry.getRegistry(1099);
-            registry.list( );
-        }catch(Exception e){
-            Registry registry =  LocateRegistry.createRegistry(1099);
-        }
-    }
 
 
     private static void receive(QCCommandsImpl obj) {
-        DatagramSocket socket = null;
+
         String returnMessage = "";
         try {
             socket = new DatagramSocket(2003);
@@ -68,6 +52,7 @@ public class QCServer {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 socket.receive(request);
                 String sentence = new String( request.getData(), request.getOffset(), request.getLength()).trim();
+
                 String[] split = sentence.split("-");
                 //action+"-"+username+"-"+itemId+"-"+cost
                 System.out.println("Function received is: " + split[0]);
@@ -106,6 +91,8 @@ public class QCServer {
                     returnMessage = obj.localOwnsItem(split[1],split[2]);
                     System.out.println(returnMessage);
                 }
+
+                System.out.println("The end!");
                 byte[] sendData = returnMessage.getBytes();
                 DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
                         request.getPort());
@@ -119,6 +106,63 @@ public class QCServer {
                 socket.close();
         }
     }
+
+    private static void receiveFromRM(QCCommandsImpl obj) {
+
+        String returnMessage = "";
+        try {
+            RMsocket = new DatagramSocket(3003);
+            byte[] buffer = new byte[1000];
+            while (true) {
+                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+                RMsocket.receive(request);
+                String sentence = new String( request.getData(), request.getOffset(), request.getLength()).trim();
+//                System.out.println(sentence);
+                if(sentence.equals("Exit")){
+                    System.out.println("Killing QC Server");
+                    returnMessage = "QC IS DEAD";
+                    byte[] sendData = returnMessage.getBytes();
+                    DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
+                            request.getPort());
+                    RMsocket.send(reply);
+                    RMsocket.close();
+                    socket.close();
+                    RMsocket = null;
+                    socket = null;
+                    return;
+                }
+                if(sentence.equals("Heartbeat")){
+                    returnMessage = "TRUE";
+                    byte[] sendData = returnMessage.getBytes();
+                    DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
+                            request.getPort());
+                    RMsocket.send(reply);
+                    RMsocket.close();
+                    return;
+                }
+                Request dumbo = new Request(sentence);
+                System.out.println(dumbo.getStore());
+                if(dumbo.getRequestDetails().getMethod_name().equals("returnItem")){
+                    returnMessage = obj.returnItem(
+                            dumbo.getRequestDetails().getParameters().get("customerID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("itemID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("dateOfReturn").toString());
+                }
+                System.out.println("The end!");
+                byte[] sendData = returnMessage.getBytes();
+                DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
+                        request.getPort());
+                RMsocket.send(reply);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+            e.printStackTrace();
+        } finally {
+            if (RMsocket != null)
+                RMsocket.close();
+        }
+    }
+
 
 
 

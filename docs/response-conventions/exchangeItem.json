@@ -1,6 +1,7 @@
 {
     "replica_id" : "karl/waqar/nick",
     "sequence_id" : "",
+    "store" : "QC",
     "response_details" : {
         "method_name" : "exchangeItem",
         "message" : "customerID exchange of olditemID with newitemID on dateOfExchange",
