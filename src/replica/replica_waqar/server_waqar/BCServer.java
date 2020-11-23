@@ -147,12 +147,52 @@ public class BCServer {
                 }
                 Request dumbo = new Request(sentence);
                 System.out.println(dumbo.getStore());
+
+                if(dumbo.getRequestDetails().getMethod_name().equals("addItem")){
+                    returnMessage = obj.addItem(
+                            dumbo.getRequestDetails().getParameters().get("managerID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("itemID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("itemName").toString(),
+                            Integer.parseInt(dumbo.getRequestDetails().getParameters().get("quantity").toString()),
+                            Integer.parseInt(dumbo.getRequestDetails().getParameters().get("price").toString()));
+                }
+                if(dumbo.getRequestDetails().getMethod_name().equals("exchangeItem")){
+                    returnMessage = obj.exchangeLogic(
+                            dumbo.getRequestDetails().getParameters().get("customerID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("newitemID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("olditemID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("dateOfExchange").toString());
+                }
+                if(dumbo.getRequestDetails().getMethod_name().equals("findItem")){
+                    returnMessage = obj.findItem(
+                            dumbo.getRequestDetails().getParameters().get("customerID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("itemName").toString());
+                }
+                if(dumbo.getRequestDetails().getMethod_name().equals("listItemAvailability")){
+                    returnMessage = obj.listItemAvailability(
+                            dumbo.getRequestDetails().getParameters().get("managerID").toString());
+                }
+                if(dumbo.getRequestDetails().getMethod_name().equals("purchaseItem")){
+                    returnMessage = obj.purchaseItem(
+                            dumbo.getRequestDetails().getParameters().get("customerID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("itemID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("dateOfPurchase").toString());
+                }
+                if(dumbo.getRequestDetails().getMethod_name().equals("removeItem")){
+                    returnMessage = obj.removeItem(
+                            dumbo.getRequestDetails().getParameters().get("managerID").toString(),
+                            dumbo.getRequestDetails().getParameters().get("itemID").toString(),
+                            Integer.parseInt(dumbo.getRequestDetails().getParameters().get("quantity").toString()));
+                }
                 if(dumbo.getRequestDetails().getMethod_name().equals("returnItem")){
                     returnMessage = obj.returnItem(
                             dumbo.getRequestDetails().getParameters().get("customerID").toString(),
                             dumbo.getRequestDetails().getParameters().get("itemID").toString(),
                             dumbo.getRequestDetails().getParameters().get("dateOfReturn").toString());
                 }
+
+
+
                 System.out.println("The end!");
                 byte[] sendData = returnMessage.getBytes();
                 DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
