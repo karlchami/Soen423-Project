@@ -11,14 +11,14 @@ import java.util.ArrayList;
 public class Sequencer {
     private static int seq = 0;
     private static ArrayList<String> requestList = new ArrayList<>(50);
-    private static DatagramSocket socket = null;
+    private static MulticastSocket multicastSocket;
     private static InetAddress group;
     private static Gson gson = new Gson();
 
     public static void main(String[] args) {
         try {
             group = InetAddress.getByName("230.4.4.5");
-            socket = new MulticastSocket(4444);
+            multicastSocket = new MulticastSocket(4444);
 
             String s = "{\n" +
                     "    \"replica_id\" : \"karl/waqar/nick\",\n" +
@@ -40,14 +40,14 @@ public class Sequencer {
             int i = 0;
             while (true) {
 //                forwardRequest();
-                if (i==4){
+                if (i==3){
                     multicastRequest("KILL");
                     Thread.sleep(41000);
                 }
                 i++;
                 System.out.println("Sent");
                 multicastRequest(s);
-                Thread.sleep(1250);
+                Thread.sleep(500);
 
             }
         } catch (Exception e) {
@@ -84,27 +84,25 @@ public class Sequencer {
     private static void multicastRequest(String message) throws IOException {
         byte[] buffer = message.getBytes();
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, 4444);
-        socket.send(packet);
+        multicastSocket.send(packet);
     }
 
-    private static void receiveReplicaManager() throws Exception {
-        DatagramSocket sock = new DatagramSocket(4200);
+    private static void receiveRM() throws Exception {
+        DatagramSocket socket = new DatagramSocket(4200);
 
         byte[] buffer = new byte[1000];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
-        sock.receive(packet);
+        socket.receive(packet);
 
         String seqString = new String(packet.getData(), 0, packet.getLength());
-
         int seqId = Integer.parseInt(seqString);
 
         String request = requestList.get(seqId);
 
         byte[] requestBuffer = request.getBytes();
-
         DatagramPacket resend = new DatagramPacket(requestBuffer, requestBuffer.length, packet.getAddress(), packet.getPort());
 
-        sock.send(resend);
+        socket.send(resend);
     }
 }

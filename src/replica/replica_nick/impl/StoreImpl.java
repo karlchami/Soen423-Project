@@ -5,8 +5,6 @@ import replica.replica_nick.models.Item;
 import replica.replica_nick.models.Purchase;
 import replica.replica_nick.utility.StoreLogger;
 
-import javax.jws.WebService;
-import javax.jws.soap.SOAPBinding;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -15,9 +13,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-@WebService(endpointInterface = "replica.replica_nick.impl.StoreInterface")
-@SOAPBinding(style = SOAPBinding.Style.RPC)
-public class StoreImpl implements StoreInterface {
+public class StoreImpl {
     // region Instance Variables
     private String storePrefix;
     private HashMap<String, Item> inventory;
@@ -37,10 +33,11 @@ public class StoreImpl implements StoreInterface {
         setDefaultValues();
     }
 
-    public StoreImpl() {
-
-    }
     // endregion
+
+    public String getStorePrefix() {
+        return storePrefix;
+    }
 
     // region Store Setup
 
