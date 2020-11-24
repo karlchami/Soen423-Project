@@ -6,9 +6,6 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.rmi.AlreadyBoundException;
 import org.omg.CosNaming.*;
 import org.omg.CosNaming.NamingContextPackage.*;
@@ -19,6 +16,7 @@ import java.text.ParseException;
 
 import frontend.corba.frontendPOA;
 import frontend.utils.Tuple;
+import frontend.utils.RequestBuilder;
 
 public class frontend extends frontendPOA  {
 
@@ -54,41 +52,105 @@ public class frontend extends frontendPOA  {
 			rm_info.add(new Tuple<InetAddress, Integer, String>(local_host, 3002, "nick"));
 			// Set response delay
 			this.delay = 999;
-						
+									
 			log = startLogger(frontend_id);
 			log.info("Frontend started on port " + port);	
 	}
 	
 	public String addItem(String managerID, String itemID, String itemName, int quantity, int price) {
-		return null;
+		String request = RequestBuilder.addItemRequest(managerID, itemID, itemName, quantity, price);
+		String message = messageBuild(address, port, request);
+		sendRequest(message, sequencer_address, sequencer_port);
+		try {
+			String response = recieve(socket);
+			return response;
+		} catch (IOException e) {
+			return e.getMessage();
+		}
 	}
 
 	public String removeItem(String managerID, String itemID, int quantity) {
-		return null;
+		String request = RequestBuilder.removeItemRequest(managerID, itemID, quantity);
+		String message = messageBuild(address, port, request);
+		sendRequest(message, sequencer_address, sequencer_port);
+		try {
+			String response = recieve(socket);
+			return response;
+		} catch (IOException e) {
+			return e.getMessage();
+		}
 	}
 	
-	public String listItemAvailability(String managerID){		
-		return null;
+	public String listItemAvailability(String managerID){	
+		String request = RequestBuilder.listItemAvailabilityRequest(managerID);
+		String message = messageBuild(address, port, request);
+		sendRequest(message, sequencer_address, sequencer_port);
+		try {
+			String response = recieve(socket);
+			return response;
+		} catch (IOException e) {
+			return e.getMessage();
+		}
 	}
 	
 	public String purchaseItem(String customerID, String itemID, String dateOfPurchase) {
-		return null;	
+		String request = RequestBuilder.purchaseItemRequest(customerID, itemID, dateOfPurchase);
+		String message = messageBuild(address, port, request);
+		sendRequest(message, sequencer_address, sequencer_port);
+		try {
+			String response = recieve(socket);
+			return response;
+		} catch (IOException e) {
+			return e.getMessage();
+		}	
 	}
 	
 	public String findItem(String customerID, String itemName) {
-		return null;
+		String request = RequestBuilder.findItemRequest(customerID, itemName);
+		String message = messageBuild(address, port, request);
+		sendRequest(message, sequencer_address, sequencer_port);
+		try {
+			String response = recieve(socket);
+			return response;
+		} catch (IOException e) {
+			return e.getMessage();
+		}
 	}
 		
 	public String returnItem (String customerID, String itemID, String dateOfReturn) {	
-		return null;
+		String request = RequestBuilder.returnItemRequest(customerID, itemID, dateOfReturn);
+		String message = messageBuild(address, port, request);sendRequest(message, sequencer_address, sequencer_port);
+		sendRequest(message, sequencer_address, sequencer_port);
+		try {
+			String response = recieve(socket);
+			return response;
+		} catch (IOException e) {
+			return e.getMessage();
+		}
 	}	
 	
 	public String exchangeItem(String customerID, String newItemID, String oldItemID, String dateOfExchange) {
-		return null;
+		String request = RequestBuilder.exchangeItemRequest(customerID, newItemID, oldItemID, dateOfExchange);
+		String message = messageBuild(address, port, request);
+		sendRequest(message, sequencer_address, sequencer_port);
+		try {
+			String response = recieve(socket);
+			return response;
+		} catch (IOException e) {
+			return e.getMessage();
+		}
 	}
 		
 	public String addCustomerWaitList(String customerID, String itemID) {
-		return null;
+		String request = RequestBuilder.addCustomerWaitListRequest(customerID, itemID);
+		String message = messageBuild(address, port, request);
+		sendRequest(message, sequencer_address, sequencer_port);
+		try {
+			String response = recieve(socket);
+			return response;
+		} catch (IOException e) {
+			return e.getMessage();
+		}
 	}
 		
 	public Logger startLogger(String frontend_id) {
@@ -135,6 +197,10 @@ public class frontend extends frontendPOA  {
         } catch (IOException ex) {
         	return;
         }
+    }
+    
+    private String recieve(DatagramSocket socket) throws IOException {
+		return "";
     }
     
 	public void shutdown() {

@@ -60,6 +60,15 @@ public class RequestBuilder {
         return jsonRequestBuilder("findItem", parameters);	
 	}
 	
+	public static String returnItemRequest(String customerID, String itemID, String dateOfReturn) {
+        String parameters = "{\n" +
+                "    \"customerID\" : \"" + customerID + "\",\n" +
+                "    \"itemID\" : \"" + itemID + "\",\n" +
+                "    \"dateOfReturn\" : \"" + dateOfReturn + "\"\n" +
+                "}";
+        return jsonRequestBuilder("returnItem", parameters);	
+	}
+	
 	public static String exchangeItemRequest(String customerID, String newItemID, String oldItemID, String dateOfExchange) {
         String parameters = "{\n" +
                 "    \"customerID\" : \"" + customerID + "\",\n" +
@@ -68,5 +77,13 @@ public class RequestBuilder {
                 "    \"dateOfExchange\" : \"" + dateOfExchange + "\"\n" +
                 "}";
         return jsonRequestBuilder("exchangeItem", parameters);
+	}
+	
+	public static String addCustomerWaitListRequest(String customerID, String itemID) {
+        String parameters = "{\n" +
+                "    \"customerID\" : \"" + customerID + "\",\n" +
+                "    \"itemID\" : \"" + itemID + "\"\n" +
+                "}";
+        return jsonRequestBuilder("addCustomerWaitlist", parameters);
 	}
 }
