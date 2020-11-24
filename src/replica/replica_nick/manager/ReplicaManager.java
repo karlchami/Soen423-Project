@@ -10,22 +10,25 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.ArrayList;
-import java.util.PriorityQueue;
+import java.util.HashMap;
 
 public class ReplicaManager {
-    public static PriorityQueue<String> pq = new PriorityQueue<>(50);
-    public static ArrayList<String> received_commands = new ArrayList<>(50);
-    public static Thread QC;
-    public static Thread ON;
-    public static Thread BC;
+    private static HashMap<Integer, String> requestQueue = new HashMap<>(50);
+    private static ArrayList<String> received_commands = new ArrayList<>(50);
+    private static int nextSeq = 0;
 
     public static void main(String[] args) {
         try {
             startAll();
 
-            Runnable task = ReplicaManager::receiveMulticast;
-            Thread thread = new Thread(task);
-            thread.start();
+            Runnable seqTask = ReplicaManager::receiveMulticast;
+            Runnable feTask = ReplicaManager::receiveFE;
+
+            Thread seqThread = new Thread(seqTask);
+            Thread feThread = new Thread(feTask);
+
+            seqThread.start();
+            feThread.start();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -33,60 +36,56 @@ public class ReplicaManager {
     }
 
     private static void startAll() throws InterruptedException {
-        Thread.sleep(200);
         startQC();
-        Thread.sleep(200);
         startON();
-        Thread.sleep(200);
         startBC();
     }
 
     private static void startQC() {
         Runnable task = () -> QCServer.main(null);
-        QC = new Thread(task);
+        Thread QC = new Thread(task);
         QC.start();
     }
 
     private static void startON() {
         Runnable task = () -> ONServer.main(null);
-        ON = new Thread(task);
+        Thread ON = new Thread(task);
         ON.start();
     }
 
     private static void startBC() {
         Runnable task = () -> BCServer.main(null);
-        BC = new Thread(task);
+        Thread BC = new Thread(task);
         BC.start();
     }
 
-    public static void restartAll() throws InterruptedException {
-        Thread.sleep(500);
+    private static void restartAll() throws InterruptedException {
         endQC();
-        Thread.sleep(500);
         endON();
-        Thread.sleep(500);
         endBC();
-        startAll();
         Thread.sleep(200);
-        System.out.println("Restarted");
+        startAll();
+        Thread.sleep(500);
+        System.out.println("All servers restarted.");
+        resendMessages();
     }
 
-    public static void endQC() {
-        endServerUDP(5001);
+    private static void endQC() {
         endServerUDP(5551);
+        endServerUDP(5001);
     }
 
-    public static void endON() {
-        endServerUDP(5002);
+    private static void endON() {
         endServerUDP(5552);
+        endServerUDP(5002);
     }
 
-    public static void endBC() {
-        endServerUDP(5003);
+    private static void endBC() {
         endServerUDP(5553);
+        endServerUDP(5003);
     }
 
-    public static boolean heartbeat(String storePrefix) {
+    private static boolean heartbeat(String storePrefix) {
         String message = "Heartbeat";
         String alive = "TRUE";
 
@@ -102,7 +101,7 @@ public class ReplicaManager {
         }
     }
 
-    public static void resendMessages() {
+    private static void resendMessages() {
         for (String request : received_commands) {
             sendRequest(request);
         }
@@ -113,21 +112,49 @@ public class ReplicaManager {
             socket.joinGroup(InetAddress.getByName("230.4.4.5"));
             while (true) {
                 byte[] buffer = new byte[1000];
-                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-                socket.receive(request);
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
 
-                String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
+                String message = new String(packet.getData(), packet.getOffset(), packet.getLength()).trim();
+                int seq = new Request(message).getSequence_id();
 
-                if (sentence.equals("KILL")) {
-                    restartAll();
-                    resendMessages();
-                } else {
-                    received_commands.add(sentence);
-                    sendRequest(sentence);
+                if (seq == nextSeq) {
+                    sendRequest(message);
+                    received_commands.add(message);
+                    nextSeq++;
+                } else if (seq > nextSeq) {
+                    requestQueue.put(seq, message);
+                    requestMissedPackets(nextSeq);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void requestMissedPackets(int seq) {
+        String message = requestResend(seq);
+
+        while (!message.equals("none")) {
+            Request request = new Request(message);
+
+            if (request.getSequence_id() == nextSeq) {
+                sendRequest(message);
+                received_commands.add(message);
+                nextSeq++;
+
+                String nextRequest = requestQueue.get(nextSeq);
+
+                while (nextRequest != null) {
+                    sendRequest(nextRequest);
+                    received_commands.add(nextRequest);
+                    nextRequest = requestQueue.get(++nextSeq);
+                }
+
+                message = requestResend(nextSeq);
+            } else {
+                break;
+            }
         }
     }
 
@@ -146,44 +173,27 @@ public class ReplicaManager {
         }
     }
 
-//    private static void receive() {
-//        DatagramSocket socket = null;
-//        String returnMessage = "";
-//        try {
-//            socket = new DatagramSocket(2004);
-//            byte[] buffer = new byte[1000];
-//            while (true) {
-//                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-//                socket.receive(request);
-//                String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
-//                String[] split = sentence.split("-");
-//                //action+"-"+username+"-"+itemId+"-"+cost"-"+oldItem
-//                System.out.println("Function Received " + split[0]);
-//                if (split[0].equals("Restart")) {
-//
-//                }
-//                if (split[0].equals("SendForward")) {
-//
-//                }
-//                if (split[0].equals("GetMessage")) {
-//
-//                }
-//                byte[] sendData = returnMessage.getBytes();
-//                DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
-//                        request.getPort());
-//                socket.send(reply);
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            if (socket != null)
-//                socket.close();
-//        }
-//    }
+    private static void receiveFE() {
+        try (DatagramSocket socket = new MulticastSocket(6000);) {
+            while (true) {
+                byte[] buffer = new byte[1000];
+                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+                socket.receive(request);
+
+                String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
+
+                if (sentence.equals("restart")) {
+                    restartAll();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     private static String sendUDP(int port, String message) {
         try (DatagramSocket socket = new DatagramSocket()) {
-            socket.setSoTimeout(5000);
+            socket.setSoTimeout(2500);
 
             byte[] bytes = message.getBytes();
             InetAddress hostName = InetAddress.getByName("localhost");
@@ -210,6 +220,27 @@ public class ReplicaManager {
             socket.send(request);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static String requestResend(int seq) {
+        try (DatagramSocket socket = new DatagramSocket()) {
+            socket.setSoTimeout(2500);
+
+            byte[] bytes = String.valueOf(seq).getBytes();
+            InetAddress hostName = InetAddress.getByName("localhost"); // REPLACE WITH ADDRESS OF SEQUENCER (WILL BE DIFFERENT HOST)
+            DatagramPacket packet = new DatagramPacket(bytes, bytes.length, hostName, 4200);
+            socket.send(packet);
+
+            byte[] buffer = new byte[1000];
+            DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+            socket.receive(reply);
+
+            return new String(reply.getData(), 0, reply.getLength());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "none";
         }
     }
 
