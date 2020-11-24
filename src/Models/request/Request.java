@@ -1,6 +1,5 @@
 package Models.request;
 
-import com.google.gson.Gson;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -8,13 +7,13 @@ public class Request {
     private int sequence_id;
     private String replica_id;
     private String store;
-    private RequestDetails requestDetails;
+    private RequestDetails request_details;
 
     public Request(String JSONString) {
         try {
             JSONParser jp = new JSONParser();
             JSONObject JObject = (JSONObject) jp.parse(JSONString);
-            this.requestDetails = new RequestDetails(JObject.get("response_details").toString());
+            this.request_details = new RequestDetails(JObject.get("request_details").toString());
             this.sequence_id = Integer.parseInt(JObject.get("sequence_id").toString());
             this.replica_id = JObject.get("replica_id").toString();
             this.store = JObject.get("store").toString();
@@ -47,12 +46,12 @@ public class Request {
         this.replica_id = replica_id;
     }
 
-    public RequestDetails getRequestDetails() {
-        return requestDetails;
+    public RequestDetails getRequest_details() {
+        return request_details;
     }
 
-    public void setRequestDetails(RequestDetails requestDetails) {
-        this.requestDetails = requestDetails;
+    public void setRequest_details(RequestDetails request_details) {
+        this.request_details = request_details;
     }
 
     public static void main(String[] args) {

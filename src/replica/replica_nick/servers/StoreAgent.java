@@ -50,9 +50,9 @@ public class StoreAgent {
                 }
 
                 Request request = new Request(message);
-                JSONObject parameters = request.getRequestDetails().getParameters();
+                JSONObject parameters = request.getRequest_details().getParameters();
 
-                switch (request.getRequestDetails().getMethod_name()) {
+                switch (request.getRequest_details().getMethod_name()) {
                     case "addItem":
                         String managerID = parameters.get("managerID").toString();
                         String itemID = parameters.get("itemID").toString();

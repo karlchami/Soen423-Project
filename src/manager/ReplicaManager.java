@@ -179,7 +179,7 @@ public class ReplicaManager {
     public static void testSeperate(String JSONString) {
         try {
             Request request = new Request(JSONString);
-            System.out.println(request.getRequestDetails().getMethod_name());
+            System.out.println(request.getRequest_details().getMethod_name());
 
 
         } catch (Exception e) {
