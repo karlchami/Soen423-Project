@@ -18,7 +18,7 @@ import frontend.corba.frontendPOA;
 import frontend.utils.Tuple;
 import frontend.utils.RequestBuilder;
 
-public class frontend extends frontendPOA  {
+public class frontendImpl extends frontendPOA  {
 
 	private org.omg.CORBA.ORB orb = null;
 	private String frontend_id;
@@ -37,7 +37,7 @@ public class frontend extends frontendPOA  {
 	private ArrayList<Tuple<InetAddress, Integer, String>> rm_info = new ArrayList<Tuple<InetAddress, Integer, String>>();
 	private static int delay;
 	
-	public frontend(ORB orb, String frontend_id) throws AlreadyBoundException, IOException {
+	public frontendImpl(ORB orb, String frontend_id) throws AlreadyBoundException, IOException {
 			super();
 		
 			this.orb = orb;
@@ -252,7 +252,7 @@ public class frontend extends frontendPOA  {
 	    Logger logger = Logger.getLogger("frontend-log");
 	    FileHandler fh;
 	    try {
-	        fh = new FileHandler("frontedn/logs/" + frontend_id + ".log");
+	        fh = new FileHandler("frontend/logs/" + frontend_id + ".log");
 	        logger.addHandler(fh);
 	        SimpleFormatter formatter = new SimpleFormatter();
 	        fh.setFormatter(formatter);
