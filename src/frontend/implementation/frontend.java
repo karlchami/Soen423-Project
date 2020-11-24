@@ -50,8 +50,8 @@ public class frontend extends frontendPOA  {
 			rm_info.add(new Tuple<InetAddress, Integer, String>(local_host, 3000, "karl"));
 			rm_info.add(new Tuple<InetAddress, Integer, String>(local_host, 3001, "waqar"));
 			rm_info.add(new Tuple<InetAddress, Integer, String>(local_host, 3002, "nick"));
-			// Set response delay
-			this.delay = 999;
+			// Set response delay (for reliable UDP)
+			delay = 999;
 									
 			log = startLogger(frontend_id);
 			log.info("Frontend started on port " + port);	
@@ -63,7 +63,7 @@ public class frontend extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return response;
+			return getResponseMessage(response);
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -75,7 +75,7 @@ public class frontend extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return response;
+			return getResponseMessage(response);
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -87,7 +87,7 @@ public class frontend extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return response;
+			return getResponseMessage(response);
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -99,7 +99,7 @@ public class frontend extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return response;
+			return getResponseMessage(response);
 		} catch (IOException e) {
 			return e.getMessage();
 		}	
@@ -111,7 +111,7 @@ public class frontend extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return response;
+			return getResponseMessage(response);
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -123,7 +123,7 @@ public class frontend extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return response;
+			return getResponseMessage(response);
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -135,7 +135,7 @@ public class frontend extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return response;
+			return getResponseMessage(response);
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -147,12 +147,107 @@ public class frontend extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return response;
+			return getResponseMessage(response);
 		} catch (IOException e) {
 			return e.getMessage();
 		}
 	}
 		
+    private static String messageBuild(InetAddress address, int port, String arguments) {
+		return address.toString() + ";" + Integer.toString(port) + ";" + arguments;
+	}
+    
+    public static void sendRequest(String message, InetAddress inet_address, int port) {
+        boolean received = false;
+        byte[] message_bytes = message.getBytes();
+        DatagramPacket request = new DatagramPacket(message_bytes, message_bytes.length, inet_address, port);
+        try (DatagramSocket sendSocket = new DatagramSocket()) {
+            sendSocket.setSoTimeout(delay);
+    		// Keeps listening until it gets a response, if no response comes in after delay, resend and wait again until received
+            while (!received) {
+                sendSocket.send(request);
+                try {
+                    byte[] buffer = new byte[1000];
+                    DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+                    sendSocket.receive(reply);
+                    String response = new String(reply.getData());
+                    // TODO: Agree on a reply message that denotes a received request
+                    if (response != null) {
+                        received = true;
+                    }
+                } catch (SocketTimeoutException e) {
+                	continue;
+                }
+            }
+        } catch (IOException ex) {
+        	return;
+        }
+    }
+    
+    private String recieve(DatagramSocket socket) throws IOException {
+    	String response_message;
+    	// Expected number of replies (RM info tuple size)
+    	int reply_count = rm_info.size();  	
+    	// Holds info about RMs that send UDP back to FE
+    	ArrayList<Tuple<InetAddress, Integer, String>> received_rm = new ArrayList<Tuple<InetAddress, Integer, String>>(); 
+    	// Determines whether we should keep receiving responses or not
+    	Boolean receive = true;
+    	
+    	try {
+    		while(receive) {
+    			byte[] buffer = new byte[1000];
+                DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+                socket.receive(response);
+                // Add RM to received RMs tuple after receiving
+                Tuple<InetAddress, Integer, String> rm = new Tuple<InetAddress, Integer, String>(response.getAddress(), response.getPort(), new String(response.getData()));
+                
+                if (!received_rm.contains(rm)) {
+                	received_rm.add(rm);
+                	// Sends back a reply to RM denoting that response is received
+                	// TODO: Agree on reply message
+                	sendRequest("received-response", response.getAddress(), response.getPort());
+                }
+                if(reply_count == received_rm.size()) {
+                	receive = false;
+                }
+    		}
+    		// Compares RM responses and returns the correct answer
+    		response_message = compareResponses(received_rm);
+    		return response_message;
+    		
+    	} catch (SocketException ex) {
+            System.out.println("Error connecting to port");
+            System.exit(1);
+        } catch (IOException ex) {
+        	throw ex;
+        }
+		return "No response received";
+    }
+    
+    // Compares JSON responses from different RMs
+    public String compareResponses(ArrayList<Tuple<InetAddress, Integer, String>> received_rm) {
+    	// TODO: Decode json string, get needed comparison params and construct them into a string for comparison
+		return null;
+    }
+    
+    // Notifies all RMs in multicast about a single RM failure
+    private void notify_rm(InetAddress address, int port) {
+    	for (Tuple<InetAddress, Integer, String> rm: rm_info) {
+    		String message = "FAILED-RM" + "," + address + "," + port;
+    		String response = messageBuild(address, port, message);
+    		new Thread(() -> {
+    			sendRequest(message, rm.getInetAddress(), rm.getPort());
+            }).start();
+    	}
+    }
+    
+    // Decodes Json string and returns message key only
+    public String getResponseMessage(String response_json) {
+    	String message = "";
+    	return message;
+    }
+    
+    // Handles logging
 	public Logger startLogger(String frontend_id) {
 	    Logger logger = Logger.getLogger("frontend-log");
 	    FileHandler fh;
@@ -169,39 +264,6 @@ public class frontend extends frontendPOA  {
 	    }
 	    return logger;
 	}
-	
-    private static String messageBuild(InetAddress address, int port, String arguments) {
-		return address.toString() + ";" + Integer.toString(port) + ";" + arguments;
-	}
-    
-    public static void sendRequest(String message, InetAddress inet_address, int port) {
-        boolean received = false;
-        byte[] message_bytes = message.getBytes();
-        DatagramPacket request = new DatagramPacket(message_bytes, message_bytes.length, inet_address, port);
-        try (DatagramSocket sendSocket = new DatagramSocket()) {
-            sendSocket.setSoTimeout(delay);
-            while (!received) {
-                sendSocket.send(request);
-                try {
-                    byte[] buffer = new byte[1000];
-                    DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
-                    sendSocket.receive(reply);
-                    String response = new String(reply.getData());
-                    if (response != null) {
-                        received = true;
-                    }
-                } catch (SocketTimeoutException e) {
-                	return;
-                }
-            }
-        } catch (IOException ex) {
-        	return;
-        }
-    }
-    
-    private String recieve(DatagramSocket socket) throws IOException {
-		return "";
-    }
     
 	public void shutdown() {
 		this.orb.shutdown(false);
