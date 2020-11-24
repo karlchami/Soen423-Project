@@ -4,8 +4,8 @@ import Models.request.Request;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.net.*;
 
+import java.net.*;
 import java.util.ArrayList;
 
 public class Sequencer {
@@ -20,49 +20,59 @@ public class Sequencer {
             group = InetAddress.getByName("230.4.4.5");
             multicastSocket = new MulticastSocket(4444);
 
-            String s = "{\n" +
-                    "    \"replica_id\" : \"karl/waqar/nick\",\n" +
-                    "    \"sequence_id\" : -1,\n" +
-                    "    \"store\" : \"QC\",\n" +
-                    "    \"response_details\" : {\n" +
-                    "        \"method_name\" : \"returnItem\",\n" +
-                    "        \"message\" : \"customerID return of itemID on dateOfReturn\",\n" +
-                    "        \"status_code\" : \"successful/failed\",\n" +
-                    "        \"parameters\" : {\n" +
-                    "            \"customerID\" : \"QCU1001\",\n" +
-                    "            \"itemID\" : \"QC1023\",\n" +
-                    "            \"dateOfReturn\" : \"20112020\"\n" +
-                    "        }\n" +
-                    "    }\n" +
-                    "}";
+            Runnable feTask = Sequencer::forwardRequest;
+            Thread feThread = new Thread(feTask);
+            feThread.start();
 
-            Thread.sleep(250);
-            int i = 0;
-            while (true) {
-//                forwardRequest();
-                if (i==3){
-                    multicastRequest("KILL");
-                    Thread.sleep(41000);
+            Runnable rmTask = Sequencer::receiveRM;
+            Thread rmThread = new Thread(rmTask);
+            rmThread.start();
+
+            // For testing - TO BE DELETED
+            for (int i = 0; i < 30; i++) {
+                String s = "{\n" +
+                        "    \"replica_id\" : \"karl/waqar/nick\",\n" +
+                        "    \"sequence_id\" : " + i + ",\n" +
+                        "    \"store\" : \"QC\",\n" +
+                        "    \"request_details\" : {\n" +
+                        "        \"method_name\" : \"returnItem\",\n" +
+                        "        \"parameters\" : {\n" +
+                        "            \"customerID\" : \"QCU1001\",\n" +
+                        "            \"itemID\" : \"QC200" + i + "\",\n" +
+                        "            \"dateOfReturn\" : \"20112020\"\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}";
+
+                requestList.add(s);
+
+                if (i != 2 && i != 7 && i != 8 && i != 9 && i != 13 && i != 21 && i != 27 && i != 28) {
+                    multicastRequest(s);
+                    System.out.println("sent: " + i);
                 }
-                i++;
-                System.out.println("Sent");
-                multicastRequest(s);
-                Thread.sleep(500);
-
+//                if (i == 4 || i == 14 || i == 23) {
+//                    multicastRequest("restart");
+//                    System.out.println("sent: restart");
+//                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
-    private static void forwardRequest() throws Exception {
-        String request = receiveFrontEnd();
-        String seqRequest = attachSequenceId(request);
-        multicastRequest(seqRequest);
+    private static void forwardRequest() {
+        try {
+            while (true) {
+                String request = receiveFE();
+                String seqRequest = attachSequenceId(request);
+                multicastRequest(seqRequest);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private static String receiveFrontEnd() throws Exception {
+    private static String receiveFE() throws IOException {
         DatagramSocket sock = new DatagramSocket(4100);
 
         byte[] buffer = new byte[1000];
@@ -87,22 +97,40 @@ public class Sequencer {
         multicastSocket.send(packet);
     }
 
-    private static void receiveRM() throws Exception {
-        DatagramSocket socket = new DatagramSocket(4200);
+    private static void receiveRM() {
+        DatagramSocket socket = null;
+        DatagramPacket packet = null;
+        while (true) {
+            try {
+                socket = new DatagramSocket(4200);
 
-        byte[] buffer = new byte[1000];
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                byte[] buffer = new byte[1000];
+                packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
 
-        socket.receive(packet);
+                String seqString = new String(packet.getData(), 0, packet.getLength());
+                int seqId = Integer.parseInt(seqString);
 
-        String seqString = new String(packet.getData(), 0, packet.getLength());
-        int seqId = Integer.parseInt(seqString);
+                String request = requestList.get(seqId);
 
-        String request = requestList.get(seqId);
+                byte[] bytes = request != null ? request.getBytes() : "none".getBytes();
+                DatagramPacket resend = new DatagramPacket(bytes, bytes.length, packet.getAddress(), packet.getPort());
+                socket.send(resend);
 
-        byte[] requestBuffer = request.getBytes();
-        DatagramPacket resend = new DatagramPacket(requestBuffer, requestBuffer.length, packet.getAddress(), packet.getPort());
-
-        socket.send(resend);
+            } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                byte[] bytes = "none".getBytes();
+                DatagramPacket resend = new DatagramPacket(bytes, bytes.length, packet.getAddress(), packet.getPort());
+                try {
+                    socket.send(resend);
+                } catch (IOException io) {
+                    e.printStackTrace();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                assert socket != null;
+                socket.close();
+            }
+        }
     }
 }
