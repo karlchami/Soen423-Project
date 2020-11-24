@@ -53,7 +53,7 @@ public class frontendImpl extends frontendPOA  {
 			// Set response delay (for reliable UDP)
 			delay = 999;
 									
-			log = startLogger(frontend_id);
+			log = startLogger();
 			log.info("Frontend started on port " + port);	
 	}
 	
@@ -248,7 +248,7 @@ public class frontendImpl extends frontendPOA  {
     }
     
     // Handles logging
-	public Logger startLogger(String frontend_id) {
+	public Logger startLogger() {
 	    Logger logger = Logger.getLogger("frontend-log");
 	    FileHandler fh;
 	    try {

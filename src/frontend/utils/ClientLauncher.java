@@ -28,7 +28,7 @@ public class ClientLauncher {
     	return FE;
 	}
 	
-	public static void initializeORB(String[] args, String frontend_id)  {
+	public static void initializeORB(String[] args, String store)  {
 		new Thread(new Runnable() {
             @Override
             public void run() {
@@ -36,12 +36,12 @@ public class ClientLauncher {
             		ORB orb = ORB.init(args, null);
     				POA rootPOA = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
     				rootPOA.the_POAManager().activate();
-    				frontendImpl frontEnd = new frontendImpl(orb, frontend_id);
+    				frontendImpl frontEnd = new frontendImpl(orb, store);
 					org.omg.CORBA.Object ref = rootPOA.servant_to_reference(frontEnd);
 					frontend href = frontendHelper.narrow(ref);
 					org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
 					NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
-					NameComponent path[] = ncRef.to_name(frontend_id);
+					NameComponent path[] = ncRef.to_name(store);
 					ncRef.rebind(path, href);
     		    	orb.run();
             	}
@@ -52,23 +52,5 @@ public class ClientLauncher {
             
         }).start();
 		System.out.println("Frontend built");
-	}
-	
-	// Handles logging
-	public Logger startLogger(String userID) {
-	    Logger logger = Logger.getLogger("client-log");
-	    FileHandler fh;
-	    try {
-	        fh = new FileHandler("frontend/logs/client/" + userID + ".log");
-	        logger.addHandler(fh);
-	        SimpleFormatter formatter = new SimpleFormatter();
-	        fh.setFormatter(formatter);
-	
-	    } catch (SecurityException e) {
-	        e.printStackTrace();
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	    }
-	    return logger;
 	}
 }
