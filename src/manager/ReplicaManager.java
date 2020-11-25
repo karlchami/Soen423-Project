@@ -2,6 +2,7 @@ package manager;
 
 
 import Models.request.Request;
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import replica.replica_waqar.server_waqar.BCServer;
 import replica.replica_waqar.server_waqar.ONServer;
 import replica.replica_waqar.server_waqar.QCServer;
@@ -13,19 +14,23 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
+import java.util.Queue;
 
 
 public class ReplicaManager {
-    public static PriorityQueue<String> pq = new PriorityQueue<String>(20);
+    public static ArrayList<String> stashed_commands;
     public static ArrayList<String> received_commands;
     public static Thread QC;
     public static Thread ON;
     public static Thread BC;
+    public static int sequence_count;
 
     public static void main(String args[]) {
 
         try {
+            sequence_count = 1;
             startAll();
+            stashed_commands = new ArrayList<String>();
             received_commands = new ArrayList<String>();
             Runnable task = () -> {
                 receive_multicast();
@@ -205,6 +210,78 @@ public class ReplicaManager {
         }
     }
 
+    public static void handleRequest(String sentence){
+        Request dumbo = new Request(sentence);
+
+        if(sequence_count != dumbo.getSequence_id()){
+            stashed_commands.add(sentence);
+            System.out.println("Current Count : " + sequence_count + "\n Received Count : " + dumbo.getSequence_id());
+            System.out.println("Added to queue");
+            requestMissedPackets(sequence_count, dumbo.getSequence_id());
+            return;
+        }
+        received_commands.add(sentence);
+
+        System.out.println("Executing : " + sequence_count);
+        sequence_count++;
+
+        if(dumbo.getStore().equals("QC")){
+            System.out.println(sendUDP(3003, sentence));
+        }
+        if(dumbo.getStore().equals("BC")){
+            sendUDP(3002, sentence);
+        }
+        if(dumbo.getStore().equals("ON")){
+            sendUDP(3001, sentence);
+        }
+    }
+
+    private static void requestMissedPackets(int seq, int received_message_count) {
+
+        for(int i=seq; i<received_message_count; i++){
+            String message = requestResend(seq).trim();
+            handleRequest(message);
+        }
+        handleOutOfOrder();
+
+    }
+
+    private static String requestResend(int seq) {
+        try (DatagramSocket socket = new DatagramSocket()) {
+            socket.setSoTimeout(2500);
+
+            byte[] bytes = String.valueOf(seq).getBytes();
+            InetAddress hostName = InetAddress.getByName("230.4.4.5"); // REPLACE WITH ADDRESS OF SEQUENCER (WILL BE DIFFERENT HOST)
+            DatagramPacket packet = new DatagramPacket(bytes, bytes.length, hostName, 4200);
+            socket.send(packet);
+
+            byte[] buffer = new byte[1000];
+            DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+            socket.receive(reply);
+
+            return new String(reply.getData(), 0, reply.getLength());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "none";
+        }
+    }
+
+    public static void handleOutOfOrder(){
+        String command = "";
+        for(int i=0; i<stashed_commands.size(); i++){
+            Request request = new Request(stashed_commands.get(i));
+            if(request.getSequence_id() == sequence_count){
+                command = stashed_commands.get(i);
+                stashed_commands.remove(i);
+                handleRequest(command);
+            }
+        }
+        if(!command.equals(""))
+            handleOutOfOrder();
+
+    }
+
 
     private static void receive_multicast() {
         MulticastSocket socket = null;
@@ -223,17 +300,9 @@ public class ReplicaManager {
                     resendMessages();
                     continue;
                 }
-                Request dumbo = new Request(sentence);
-                received_commands.add(sentence);
-                if(dumbo.getStore().equals("QC")){
-                    System.out.println(sendUDP(3003, sentence));
-                }
-                if(dumbo.getStore().equals("BC")){
-                    sendUDP(3002, sentence);
-                }
-                if(dumbo.getStore().equals("ON")){
-                    sendUDP(3001, sentence);
-                }
+
+                handleRequest(sentence);
+
             }
         } catch (Exception e) {
             System.out.println(e);

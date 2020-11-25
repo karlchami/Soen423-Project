@@ -43,14 +43,6 @@ public class ONServer {
 
     }
 
-    public static void startTheRegistry() throws RemoteException{
-        try {
-            Registry registry = LocateRegistry.getRegistry(1099);
-            registry.list( );
-        }catch(Exception e){
-            Registry registry =  LocateRegistry.createRegistry(1099);
-        }
-    }
 
 
     private static void receive(ONCommandsImpl obj) {
@@ -65,30 +57,22 @@ public class ONServer {
 
                 String[] split = sentence.split("-");
                 //action+"-"+username+"-"+itemId+"-"+cost
-                System.out.println("Function Received " + split[0]);
+//                System.out.println("Function Received " + split[0]);
                 if(split[0].equals("purchaseItem")) {
                     returnMessage = obj.purchaseLocalItem(split[1],split[2]);
-                    System.out.println(returnMessage);
                 }
                 if(split[0].equals("findItem")) {
                     returnMessage = obj.findLocalItem(split[2]);
-                    System.out.println(returnMessage);
-
                 }if(split[0].equals("returnItem")) {
                     returnMessage = obj.returnLocalStock(split[1], split[2]);
-                    System.out.println(returnMessage);
                 }if(split[0].equals("getBudget")) {
                     returnMessage = Integer.toString(obj.getLocalBudget(split[1]));
-                    System.out.println(returnMessage);
                 }if(split[0].equals("setBudget")) {
                     returnMessage = obj.setLocalBudget(split[1],split[3]);
-                    System.out.println(returnMessage);
                 }if(split[0].equals("getOldPrice")) {
                     returnMessage = obj.getLocalOldItemPrice(split[2],split[1]);
-                    System.out.println(returnMessage);
                 }if(split[0].equals("getNewPrice")) {
                     returnMessage = obj.getLocalNewItemPrice(split[2],split[1]);
-                    System.out.println(returnMessage);
                 }if(split[0].equals("getFirstShop")) {
                     boolean value = obj.firstShop(split[1]);
                     if(value){
@@ -99,7 +83,6 @@ public class ONServer {
                     System.out.println(returnMessage);
                 }if(split[0].equals("ownsItem")) {
                     returnMessage = obj.localOwnsItem(split[1],split[2]);
-                    System.out.println(returnMessage);
                 }
                 byte[] sendData = returnMessage.getBytes();
                 DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
@@ -125,7 +108,6 @@ public class ONServer {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 RMsocket.receive(request);
                 String sentence = new String( request.getData(), request.getOffset(), request.getLength()).trim();
-                System.out.println(sentence);
 
                 if(sentence.equals("Exit")){
                     System.out.println("Killing ON Server");
@@ -194,10 +176,6 @@ public class ONServer {
                             dumbo.getRequest_details().getParameters().get("dateOfReturn").toString());
                 }
 
-
-
-
-                System.out.println("The end!");
                 byte[] sendData = returnMessage.getBytes();
                 DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
                         request.getPort());

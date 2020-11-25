@@ -51,30 +51,23 @@ public class QCServer {
 
                 String[] split = sentence.split("-");
                 //action+"-"+username+"-"+itemId+"-"+cost
-                System.out.println("Function received is: " + split[0]);
+//                System.out.println("Function received is: " + split[0]);
                 if(split[0].equals("purchaseItem")) {
                     returnMessage = obj.purchaseLocalItem(split[1],split[2]);
-                    System.out.println(returnMessage);
                 }
                 if(split[0].equals("findItem")) {
                     returnMessage = obj.findLocalItem(split[2]);
-                    System.out.println(returnMessage);
 
                 }if(split[0].equals("returnItem")) {
                     returnMessage = obj.returnLocalStock(split[1],split[2]);
-                    System.out.println(returnMessage);
                 }if(split[0].equals("getBudget")) {
                     returnMessage = Integer.toString(obj.getLocalBudget(split[1]));
-                    System.out.println(returnMessage);
                 }if(split[0].equals("setBudget")) {
                     returnMessage = obj.setLocalBudget(split[1],split[3]);
-                    System.out.println(returnMessage);
                 }if(split[0].equals("getOldPrice")) {
                     returnMessage = obj.getLocalOldItemPrice(split[2],split[1]);
-                    System.out.println(returnMessage);
                 }if(split[0].equals("getNewPrice")) {
                     returnMessage = obj.getLocalNewItemPrice(split[2],split[1]);
-                    System.out.println(returnMessage);
                 }if(split[0].equals("getFirstShop")) {
                     boolean value = obj.firstShop(split[1]);
                     if(value){
@@ -82,13 +75,10 @@ public class QCServer {
                     }else{
                         returnMessage = "false";
                     }
-                    System.out.println(returnMessage);
                 }if(split[0].equals("ownsItem")) {
                     returnMessage = obj.localOwnsItem(split[1],split[2]);
-                    System.out.println(returnMessage);
                 }
 
-                System.out.println("The end!");
                 byte[] sendData = returnMessage.getBytes();
                 DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
                         request.getPort());
@@ -113,7 +103,7 @@ public class QCServer {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 RMsocket.receive(request);
                 String sentence = new String( request.getData(), request.getOffset(), request.getLength()).trim();
-//                System.out.println(sentence);
+
                 if(sentence.equals("Exit")){
                     System.out.println("Killing QC Server");
                     returnMessage = "QC IS DEAD";
@@ -137,7 +127,6 @@ public class QCServer {
                     return;
                 }
                 Request dumbo = new Request(sentence);
-                System.out.println(dumbo.getStore());
 
                 if(dumbo.getRequest_details().getMethod_name().equals("addItem")){
                     returnMessage = obj.addItem(
@@ -182,7 +171,6 @@ public class QCServer {
                             dumbo.getRequest_details().getParameters().get("dateOfReturn").toString());
                 }
 
-                System.out.println("The end!");
                 byte[] sendData = returnMessage.getBytes();
                 DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
                         request.getPort());
