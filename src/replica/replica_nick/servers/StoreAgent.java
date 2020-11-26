@@ -1,11 +1,15 @@
 package replica.replica_nick.servers;
 
 import Models.request.Request;
+import Models.response.Response;
+import com.google.gson.Gson;
 import org.json.simple.JSONObject;
 import replica.replica_nick.impl.StoreImpl;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 
 public class StoreAgent {
     private StoreImpl store;
@@ -60,7 +64,8 @@ public class StoreAgent {
                         int quantity = Integer.parseInt(parameters.get("quantity").toString());
                         double price = Double.parseDouble(parameters.get("price").toString());
 
-                        store.addItem(managerID, itemID, itemName, quantity, price);
+                        String responseMessage = store.addItem(managerID, itemID, itemName, quantity, price);
+                        sendResponse(request, responseMessage);
                         break;
 
                     case "removeItem":
@@ -68,13 +73,15 @@ public class StoreAgent {
                         itemID = parameters.get("itemID").toString();
                         quantity = Integer.parseInt(parameters.get("quantity").toString());
 
-                        store.removeItem(managerID, itemID, quantity);
+                        responseMessage = store.removeItem(managerID, itemID, quantity);
+                        sendResponse(request, responseMessage);
                         break;
 
                     case "listItemAvailability":
                         managerID = parameters.get("managerID").toString();
 
-                        store.listItemAvailability(managerID);
+                        responseMessage = store.listItemAvailability(managerID);
+                        sendResponse(request, responseMessage);
                         break;
 
                     case "purchaseItem":
@@ -82,14 +89,16 @@ public class StoreAgent {
                         itemID = parameters.get("itemID").toString();
                         String dateOfPurchase = parameters.get("dateOfPurchase").toString();
 
-                        store.purchaseItem(customerID, itemID, dateOfPurchase);
+                        responseMessage = store.purchaseItem(customerID, itemID, dateOfPurchase);
+                        sendResponse(request, responseMessage);
                         break;
 
                     case "findItem":
                         customerID = parameters.get("customerID").toString();
                         itemName = parameters.get("itemName").toString();
 
-                        store.findItem(customerID, itemName);
+                        responseMessage = store.findItem(customerID, itemName);
+                        sendResponse(request, responseMessage);
                         break;
 
                     case "returnItem":
@@ -97,7 +106,8 @@ public class StoreAgent {
                         itemID = parameters.get("itemID").toString();
                         String dateOfReturn = parameters.get("dateOfReturn").toString();
 
-                        System.out.println(store.returnItem(customerID, itemID, dateOfReturn));
+                        responseMessage = store.returnItem(customerID, itemID, dateOfReturn);
+                        sendResponse(request, responseMessage);
                         break;
 
                     case "exchangeItem":
@@ -106,17 +116,55 @@ public class StoreAgent {
                         String oldItemID = parameters.get("olditemID").toString();
                         String dateOfExchange = parameters.get("dateOfExchange").toString();
 
-                        store.exchangeItem(customerID, newItemID, oldItemID, dateOfExchange);
+                        responseMessage = store.exchangeItem(customerID, newItemID, oldItemID, dateOfExchange);
+                        sendResponse(request, responseMessage);
                         break;
 
                     case "addCustomerWaitlist":
                         customerID = parameters.get("customerID").toString();
                         itemID = parameters.get("itemID").toString();
 
-                        store.addToWaitList(itemID, customerID);
+                        responseMessage = store.addToWaitList(itemID, customerID);
+                        sendResponse(request, responseMessage);
                         break;
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendResponse(Request request, String message) {
+        String statusCode = "Success"; // parse from message
+
+        Response response = new Response(
+                String.valueOf(request.getSequence_id()),
+                "nick",
+                request.getRequest_details().getMethod_name(),
+                message,
+                statusCode
+        );
+
+        Gson gson = new Gson();
+        String responseString = gson.toJson(response);
+
+        try (DatagramSocket socket = new DatagramSocket()) {
+            socket.setSoTimeout(4000);
+
+            InetAddress hostName = InetAddress.getByName("localhost"); // CHANGE TO FRONT-END HOST NAME
+
+            byte[] bytes = responseString.getBytes();
+            DatagramPacket responsePacket = new DatagramPacket(bytes, bytes.length, hostName, 0); // CHANGE TO FE PORT
+            socket.send(responsePacket);
+
+            byte[] buffer = new byte[1000];
+            DatagramPacket frontEndPacket = new DatagramPacket(buffer, buffer.length);
+            socket.receive(frontEndPacket);
+
+            String frontEndReply = new String(frontEndPacket.getData(), 0, frontEndPacket.getLength());
+
+            System.out.println(frontEndReply);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
