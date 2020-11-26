@@ -33,6 +33,7 @@ public class ClientLauncher {
             @Override
             public void run() {
             	try {
+            		System.out.print(args[0]);
             		ORB orb = ORB.init(args, null);
     				POA rootPOA = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
     				rootPOA.the_POAManager().activate();

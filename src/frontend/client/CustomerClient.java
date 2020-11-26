@@ -30,7 +30,7 @@ public class CustomerClient {
 	    Logger logger = Logger.getLogger("client-log");
 	    FileHandler fh;
 	    try {
-	        fh = new FileHandler("frontend/logs/client/" + this.customerID + ".log");
+	        fh = new FileHandler("C:\\Users\\karlc\\eclipse-workspace\\soen423-project\\bin\\frontend\\" + this.customerID + ".log");
 	        logger.addHandler(fh);
 	        SimpleFormatter formatter = new SimpleFormatter();
 	        fh.setFormatter(formatter);
