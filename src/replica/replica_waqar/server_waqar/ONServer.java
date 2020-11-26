@@ -180,7 +180,7 @@ public class ONServer {
                             dumbo.getRequest_details().getParameters().get("itemID").toString(),
                             dumbo.getRequest_details().getParameters().get("dateOfReturn").toString());
                 }
-                Response response = new Response(String.valueOf(dumbo.getSequence_id()), dumbo.getReplica_id(),
+                Response response = new Response(String.valueOf(dumbo.getSequence_id()), "waqar",
                         dumbo.getRequest_details().getMethod_name(), returnMessage, status_code);
                 Gson gson = new Gson();
                 String json = gson.toJson(response);
