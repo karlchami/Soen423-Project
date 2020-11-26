@@ -1,6 +1,7 @@
 package frontend.client;
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -13,14 +14,14 @@ import Models.Store;
 
 public class ManagerClient {
 	private ORB orb;	
-    private Store store;
+    private UUID uuid;
 	private Logger logger;
 	private String managerID;
 
-	public ManagerClient(ORB orb, String managerID, Store store) {
+	public ManagerClient(ORB orb, String managerID, UUID uuid) {
         this.orb = orb;
         this.managerID = managerID;
-        this.store = store;
+        this.uuid = uuid;
         this.logger = this.startLogger();
 	}
 	
@@ -66,7 +67,7 @@ public class ManagerClient {
         try{
       	  	ClientLauncher.initializeORB(args, store.toString());
       	  	ORB orb = ORB.init(args, null);
-            ManagerClient manager = new ManagerClient(orb, clientID, store);
+            ManagerClient manager = new ManagerClient(orb, clientID, UUID.randomUUID());
             frontend server = ClientLauncher.getFEInterface(orb, store.toString());
             int customerOption;
             String itemID;
