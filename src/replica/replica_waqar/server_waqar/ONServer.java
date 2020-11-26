@@ -2,6 +2,8 @@ package replica.replica_waqar.server_waqar;
 
 
 import Models.request.Request;
+import Models.response.Response;
+import com.google.gson.Gson;
 import replica.replica_waqar.ServerImpl.ONCommandsImpl;
 
 import java.rmi.*;
@@ -131,6 +133,8 @@ public class ONServer {
                     RMsocket.close();
                     return;
                 }
+
+                String status_code = ""; // Will actually be set by parsing message
                 Request dumbo = new Request(sentence);
                 System.out.println(dumbo.getStore());
                 if(dumbo.getRequest_details().getMethod_name().equals("addItem")){
@@ -175,8 +179,11 @@ public class ONServer {
                             dumbo.getRequest_details().getParameters().get("itemID").toString(),
                             dumbo.getRequest_details().getParameters().get("dateOfReturn").toString());
                 }
-
-                byte[] sendData = returnMessage.getBytes();
+                Response response = new Response(String.valueOf(dumbo.getSequence_id()), dumbo.getReplica_id(),
+                        dumbo.getRequest_details().getMethod_name(), returnMessage, status_code);
+                Gson gson = new Gson();
+                String json = gson.toJson(response);
+                byte[] sendData = json.getBytes();
                 DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
                         request.getPort());
                 RMsocket.send(reply);

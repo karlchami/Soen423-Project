@@ -21,6 +21,12 @@ public class ResponseDetails {
         }
     }
 
+    public ResponseDetails(String method_name, String message, String status_code) {
+        this.method_name = method_name;
+        this.message = message;
+        this.status_code = status_code;
+    }
+
     public String getMethod_name() {
         return method_name;
     }

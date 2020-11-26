@@ -20,6 +20,12 @@ public class Response {
         }
     }
 
+    public Response(String sequence_id, String replica_id, String method_name, String message, String status_code) {
+        this.sequence_id = sequence_id;
+        this.replica_id = replica_id;
+        this.responseDetails = new ResponseDetails(method_name, message, status_code);
+    }
+
     public String getSequence_id() {
         return sequence_id;
     }
