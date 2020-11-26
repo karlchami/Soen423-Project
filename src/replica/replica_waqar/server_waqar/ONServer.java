@@ -1,6 +1,6 @@
 package replica.replica_waqar.server_waqar;
 
-import ServerImpl.ONCommandsImpl;
+import replica.replica_waqar.ServerImpl.ONCommandsImpl;
 
 
 import javax.xml.ws.Endpoint;

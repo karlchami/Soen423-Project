@@ -1,12 +1,10 @@
-package Store;
+package replica.replica_karl.src.Store;
 
 import java.text.ParseException;
 
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
-@WebService
-@SOAPBinding(style = SOAPBinding.Style.RPC)
 public interface StoreInterface {
     public boolean addItem(String managerID, String itemID, String itemName, int quantity, int price);
     public boolean removeItem(String managerID, String itemID, int quantity) ;

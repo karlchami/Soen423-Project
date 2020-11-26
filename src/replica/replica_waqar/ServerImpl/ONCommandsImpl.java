@@ -1,8 +1,8 @@
-package ServerImpl;
+package replica.replica_waqar.ServerImpl;
 
-import Model.Customer;
-import Model.Item;
-import Model.Purchase;
+import replica.replica_waqar.Model.Customer;
+import replica.replica_waqar.Model.Item;
+import replica.replica_waqar.Model.Purchase;
 
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;

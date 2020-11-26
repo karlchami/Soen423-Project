@@ -1,8 +1,8 @@
-package Store;
+package replica.replica_karl.src.Store;
 
-import models.Customer;
-import models.Manager;
-import models.Store;
+import replica.replica_karl.src.models.Customer;
+import replica.replica_karl.src.models.Manager;
+import replica.replica_karl.src.models.Store;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -50,7 +50,7 @@ public class StoreImpl implements StoreInterface {
         Logger logger = Logger.getLogger("ServerLog");
         FileHandler fh;
         try {
-            fh = new FileHandler("X:\\soen423-a3\\src\\logs\\server\\"+this.store.toString()+"_server.log");
+            fh = new FileHandler("X:\\soen423-a3\\src\\logs\\server\\"+ this.store.toString() + "_server.log");
             logger.addHandler(fh);
             SimpleFormatter formatter = new SimpleFormatter();
             fh.setFormatter(formatter);

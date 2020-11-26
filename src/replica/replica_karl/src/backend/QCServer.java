@@ -1,6 +1,6 @@
-package backend;
-import Store.StoreImpl;
-import models.Store;
+package replica.replica_karl.src.backend;
+import replica.replica_karl.src.Store.StoreImpl;
+import replica.replica_karl.src.models.Store;
 
 import java.io.IOException;
 import java.text.ParseException;

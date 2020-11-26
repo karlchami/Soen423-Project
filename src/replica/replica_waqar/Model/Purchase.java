@@ -1,4 +1,4 @@
-package Model;
+package replica.replica_waqar.Model;
 
 public class Purchase {
 

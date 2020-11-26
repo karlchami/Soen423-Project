@@ -1,5 +1,5 @@
-package Interface;
-import Model.Item;
+package replica.replica_waqar.Interface;
+import replica.replica_waqar.Model.Item;
 
 import java.rmi.*;
 import java.util.Map;

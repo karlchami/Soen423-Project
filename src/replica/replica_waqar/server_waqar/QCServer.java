@@ -1,6 +1,6 @@
 package replica.replica_waqar.server_waqar;
 
-import ServerImpl.QCCommandsImpl;
+import replica.replica_waqar.ServerImpl.QCCommandsImpl;
 
 import javax.xml.ws.Endpoint;
 import java.rmi.*;

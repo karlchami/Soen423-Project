@@ -1,4 +1,4 @@
-package models;
+package replica.replica_karl.src.models;
 
 public class Manager {
 	private String managerID;

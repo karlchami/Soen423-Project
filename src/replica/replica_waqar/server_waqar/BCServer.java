@@ -1,6 +1,6 @@
 package replica.replica_waqar.server_waqar;
 
-import ServerImpl.BCCommandsImpl;
+import replica.replica_waqar.ServerImpl.BCCommandsImpl;
 
 import java.net.*;
 

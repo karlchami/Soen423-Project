@@ -1,4 +1,4 @@
-package ServerImpl;
+package replica.replica_waqar.ServerImpl;
 
 
 import javax.jws.WebService;
