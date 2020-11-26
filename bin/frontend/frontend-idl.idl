@@ -3,15 +3,15 @@ module corba {
 	interface frontend  {
 
         string addItem(in string managerID, in string itemID, in string itemName, in long quantity, in long price);
-		string removeItem(in string managerID, in string itemID, in long quantity);
-		string listItemAvailability(in string managerID);
+	string removeItem(in string managerID, in string itemID, in long quantity);
+	string listItemAvailability(in string managerID);
 		
         string purchaseItem(in string customerID, in string itemID, in string dateOfPurchase);
-		string findItem(in string customerID, in string itemName);
+	string findItem(in string customerID, in string itemName);
         string returnItem (in string customerID, in string itemID, in string dateOfReturn);
-		string exchangeItem (in string customerId, in string newItemId, in string oldItemId, in string dateOfExchange);
+	string exchangeItem (in string customerId, in string newItemId, in string oldItemId, in string dateOfExchange);
         string addCustomerWaitList(in string itemID, in string customerID);
 
-		oneway void shutdown();
+	oneway void shutdown();
 	};
 };
