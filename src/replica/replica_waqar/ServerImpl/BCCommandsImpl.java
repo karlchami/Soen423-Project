@@ -17,9 +17,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@WebService(endpointInterface = "ServerImpl.SOAPInterface")
-@SOAPBinding(style = SOAPBinding.Style.RPC)
-public class BCCommandsImpl implements SOAPInterface {
+
+public class BCCommandsImpl{
 
     private Map<String, Item> Stock;
     private static Map<String, Queue> WaitList;

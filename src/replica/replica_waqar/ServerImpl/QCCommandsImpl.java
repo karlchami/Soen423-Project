@@ -3,8 +3,7 @@ import replica.replica_waqar.Model.Customer;
 import replica.replica_waqar.Model.Item;
 import replica.replica_waqar.Model.Purchase;
 
-import javax.jws.WebService;
-import javax.jws.soap.SOAPBinding;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,16 +11,13 @@ import java.io.PrintWriter;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.rmi.RemoteException;
-import java.sql.SQLOutput;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.net.*;
 
-@WebService(endpointInterface = "ServerImpl.SOAPInterface")
-@SOAPBinding(style = SOAPBinding.Style.RPC)
-public class QCCommandsImpl implements SOAPInterface {
+public class QCCommandsImpl{
 
     private Map<String, Item> Stock;
     private static Map<String, Queue> WaitList;

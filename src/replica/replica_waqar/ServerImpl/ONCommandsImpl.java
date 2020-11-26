@@ -20,9 +20,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 
-@WebService(endpointInterface = "ServerImpl.SOAPInterface")
-@SOAPBinding(style = SOAPBinding.Style.RPC)
-public class ONCommandsImpl implements SOAPInterface {
+public class ONCommandsImpl{
 
     private Map<String, Item> Stock;
     private static Map<String, Queue> WaitList;
