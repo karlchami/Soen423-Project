@@ -27,7 +27,7 @@ public class frontendImpl extends frontendPOA  {
 	private DatagramSocket socket;
 	
 	// Sequencer
-	private int sequencer_port = 3333;
+	private int sequencer_port = 4100;
 	private InetAddress sequencer_address = InetAddress.getLocalHost();
 	
 	// Stores RM info
@@ -55,9 +55,8 @@ public class frontendImpl extends frontendPOA  {
 	}
 	
 	public String addItem(String managerID, String itemID, String itemName, int quantity, int price) {
-		String request = RequestBuilder.addItemRequest(managerID, itemID, itemName, quantity, price);
-		String message = messageBuild(address, port, request);
-		sendRequest(message, sequencer_address, sequencer_port);
+		String request = RequestBuilder.addItemRequest(managerID, itemID, itemName, quantity, price, this.frontend_id);
+		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
 			return response;
@@ -67,9 +66,8 @@ public class frontendImpl extends frontendPOA  {
 	}
 
 	public String removeItem(String managerID, String itemID, int quantity) {
-		String request = RequestBuilder.removeItemRequest(managerID, itemID, quantity);
-		String message = messageBuild(address, port, request);
-		sendRequest(message, sequencer_address, sequencer_port);
+		String request = RequestBuilder.removeItemRequest(managerID, itemID, quantity, this.frontend_id);
+		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
 			return response;
@@ -79,9 +77,8 @@ public class frontendImpl extends frontendPOA  {
 	}
 	
 	public String listItemAvailability(String managerID){	
-		String request = RequestBuilder.listItemAvailabilityRequest(managerID);
-		String message = messageBuild(address, port, request);
-		sendRequest(message, sequencer_address, sequencer_port);
+		String request = RequestBuilder.listItemAvailabilityRequest(managerID, this.frontend_id);
+		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
 			return response;
@@ -91,9 +88,8 @@ public class frontendImpl extends frontendPOA  {
 	}
 	
 	public String purchaseItem(String customerID, String itemID, String dateOfPurchase) {
-		String request = RequestBuilder.purchaseItemRequest(customerID, itemID, dateOfPurchase);
-		String message = messageBuild(address, port, request);
-		sendRequest(message, sequencer_address, sequencer_port);
+		String request = RequestBuilder.purchaseItemRequest(customerID, itemID, dateOfPurchase, this.frontend_id);
+		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
 			return response;
@@ -103,9 +99,8 @@ public class frontendImpl extends frontendPOA  {
 	}
 	
 	public String findItem(String customerID, String itemName) {
-		String request = RequestBuilder.findItemRequest(customerID, itemName);
-		String message = messageBuild(address, port, request);
-		sendRequest(message, sequencer_address, sequencer_port);
+		String request = RequestBuilder.findItemRequest(customerID, itemName, this.frontend_id);
+		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
 			return response;
@@ -115,9 +110,8 @@ public class frontendImpl extends frontendPOA  {
 	}
 		
 	public String returnItem (String customerID, String itemID, String dateOfReturn) {	
-		String request = RequestBuilder.returnItemRequest(customerID, itemID, dateOfReturn);
-		String message = messageBuild(address, port, request);
-		sendRequest(message, sequencer_address, sequencer_port);
+		String request = RequestBuilder.returnItemRequest(customerID, itemID, dateOfReturn, this.frontend_id);
+		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
 			return response;
@@ -127,9 +121,8 @@ public class frontendImpl extends frontendPOA  {
 	}	
 	
 	public String exchangeItem(String customerID, String newItemID, String oldItemID, String dateOfExchange) {
-		String request = RequestBuilder.exchangeItemRequest(customerID, newItemID, oldItemID, dateOfExchange);
-		String message = messageBuild(address, port, request);
-		sendRequest(message, sequencer_address, sequencer_port);
+		String request = RequestBuilder.exchangeItemRequest(customerID, newItemID, oldItemID, dateOfExchange, this.frontend_id);
+		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
 			return response;
@@ -139,19 +132,14 @@ public class frontendImpl extends frontendPOA  {
 	}
 		
 	public String addCustomerWaitList(String customerID, String itemID) {
-		String request = RequestBuilder.addCustomerWaitListRequest(customerID, itemID);
-		String message = messageBuild(address, port, request);
-		sendRequest(message, sequencer_address, sequencer_port);
+		String request = RequestBuilder.addCustomerWaitListRequest(customerID, itemID, this.frontend_id);
+		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
 			return response;
 		} catch (IOException e) {
 			return e.getMessage();
 		}
-	}
-		
-    private static String messageBuild(InetAddress address, int port, String request) {
-		return address.toString() + ";" + Integer.toString(port) + ";" + request;
 	}
     
     public static void sendRequest(String message, InetAddress inet_address, int port) {

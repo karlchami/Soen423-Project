@@ -28,33 +28,6 @@ public class Sequencer {
             Thread rmThread = new Thread(rmTask);
             rmThread.start();
 
-            // For testing - TO BE DELETED
-            for (int i = 0; i < 30; i++) {
-                String s = "{\n" +
-                        "    \"replica_id\" : \"karl/waqar/nick\",\n" +
-                        "    \"sequence_id\" : " + i + ",\n" +
-                        "    \"store\" : \"QC\",\n" +
-                        "    \"request_details\" : {\n" +
-                        "        \"method_name\" : \"returnItem\",\n" +
-                        "        \"parameters\" : {\n" +
-                        "            \"customerID\" : \"QCU1001\",\n" +
-                        "            \"itemID\" : \"QC200" + i + "\",\n" +
-                        "            \"dateOfReturn\" : \"20112020\"\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "}";
-
-                requestList.add(s);
-
-                if (i != 2 && i != 7 && i != 8 && i != 9 && i != 13 && i != 21 && i != 27 && i != 28) {
-                    multicastRequest(s);
-                    System.out.println("sent: " + i);
-                }
-//                if (i == 4 || i == 14 || i == 23) {
-//                    multicastRequest("restart");
-//                    System.out.println("sent: restart");
-//                }
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -77,9 +50,8 @@ public class Sequencer {
 
         byte[] buffer = new byte[1000];
         DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-
         sock.receive(request);
-
+        System.out.print(new String(request.getData(), 0, request.getLength()));
         return new String(request.getData(), 0, request.getLength());
     }
 
