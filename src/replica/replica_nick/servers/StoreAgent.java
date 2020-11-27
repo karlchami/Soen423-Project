@@ -154,6 +154,7 @@ public class StoreAgent {
             InetAddress hostName = InetAddress.getByName("localhost"); // CHANGE TO FRONT-END HOST NAME
 
             byte[] bytes = responseString.getBytes();
+            System.out.println(responseString);
             DatagramPacket responsePacket = new DatagramPacket(bytes, bytes.length, hostName, 5555); // CHANGE TO FE PORT
             socket.send(responsePacket);
 

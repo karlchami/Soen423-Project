@@ -2,11 +2,14 @@ package frontend.implementation;
 
 import java.net.*;
 import java.util.ArrayList;
+import java.util.ResourceBundle;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.io.*;
 import java.rmi.AlreadyBoundException;
+
+import Models.response.Response;
 import org.omg.CORBA.*;
 
 import frontend.corba.frontendPOA;
@@ -39,7 +42,7 @@ public class frontendImpl extends frontendPOA  {
 		
 			this.orb = orb;
 			this.frontend_id = frontend_id;
-			this.socket = new DatagramSocket(this.port, this.address);
+			this.socket = new DatagramSocket(this.port);
 			
 			// Add RM info to tuple
 			// TODO: Agree on port number for each RM
@@ -179,6 +182,7 @@ public class frontendImpl extends frontendPOA  {
     }
     
     private String recieve(DatagramSocket socket) throws IOException {
+		log.info("inside");
     	String response_message;
     	// Expected number of replies (RM info tuple size)
     	int reply_count = rm_info.size();  	
@@ -186,22 +190,26 @@ public class frontendImpl extends frontendPOA  {
     	ArrayList<Tuple<InetAddress, Integer, String>> received_rm = new ArrayList<Tuple<InetAddress, Integer, String>>(); 
     	// Determines whether we should keep receiving responses or not
     	boolean receive = true;
-    	socket.setSoTimeout(4000);
+    	socket.setSoTimeout(12000);
     	try {
     		while(receive) {
+    			log.info("here");
     			byte[] buffer = new byte[1000];
                 DatagramPacket response = new DatagramPacket(buffer, buffer.length);
                 socket.receive(response);
                 // Add RM to received RMs tuple after receiving
+
                 Tuple<InetAddress, Integer, String> rm = new Tuple<InetAddress, Integer, String>(response.getAddress(), response.getPort(), new String(response.getData(), 0, response.getLength()));
-                
+                log.info(new String(response.getData()));
                 if (!received_rm.contains(rm)) {
                 	received_rm.add(rm);
                 	// Sends back a reply to RM denoting that response is received
                 	// TODO: Agree on reply message
                 	sendMessageNoReply("received-response", response.getAddress(), response.getPort());
                 }
-                if(reply_count == received_rm.size()) {
+                reply_count = 0;
+                reply_count++;
+                if(reply_count == 1) {
                 	receive = false;
                 }
     		}
@@ -215,7 +223,10 @@ public class frontendImpl extends frontendPOA  {
     		return response_message;
         } catch (IOException ex) {
         	throw ex;
-        }
+        } catch (Exception ex) {
+    		log.info("Crashed" + ex.getMessage());
+			throw ex;
+		}
     }
     
     public String[] decodeResponse(String JSONString){
@@ -235,6 +246,7 @@ public class frontendImpl extends frontendPOA  {
     
     public String[] decodeResponseDetails(String JSONString) {
     	// [status_code, message]
+		log.info(JSONString);
     	String[] decoded_details = new String[2];
     	try {
     		JSONParser jp = new JSONParser();
@@ -259,12 +271,12 @@ public class frontendImpl extends frontendPOA  {
     	for(Tuple<InetAddress, Integer, String> single_rm : received_rm) {
     		// getName is the equivalent of getResponseMessage
     		String raw_response = single_rm.getName().trim();
-    		String[] decoded_response = this.decodeResponse(raw_response);
-    		
-    		// Get all response information needed
-    		String replica_id = decoded_response[0];
-    		String[] response_details = this.decodeResponseDetails(decoded_response[2]);
-    		String message = response_details[1];
+			log.info("RAW FUCKING RESPONSE " + raw_response);
+			Response rawResponse = new Response(raw_response);
+			log.info("FUCKING MESSAGE IS : " + rawResponse.getResponseDetails().getMessage());
+//    		String replica_id = decoded_response[1];
+    		String replica_id = rawResponse.getReplica_id();
+    		String message = rawResponse.getResponseDetails().getMessage();
     		
     		Tuple<InetAddress, Integer, String> rm_info_name = new Tuple<InetAddress, Integer, String>(single_rm.getInetAddress(), single_rm.getPort(), replica_id);
     		received_rm_info.add(rm_info_name);
@@ -296,12 +308,11 @@ public class frontendImpl extends frontendPOA  {
     		for(Tuple<InetAddress, Integer, String> rm : received_rm) {
         		// getName is the equivalent of getResponseMessage
         		String raw = rm.getName().trim();
-        		String[] decoded = this.decodeResponse(raw);	
-        		String[] details = this.decodeResponseDetails(decoded[2]);
-        		String msg = details[1];
+        		Response rawResponse = new Response(raw);
+        		String msg = rawResponse.getResponseDetails().getMessage();
         		
         		if( ( !response_message.equals(msg) ) ) {
-    	    		notify_rm(rm.getInetAddress(), rm.getPort(), "FAILED-RM", decoded[2]);
+    	    		notify_rm(rm.getInetAddress(), rm.getPort(), "FAILED-RM", rawResponse.getReplica_id());
         		}
     		}
     	
@@ -329,7 +340,7 @@ public class frontendImpl extends frontendPOA  {
 	    Logger logger = Logger.getLogger("frontend-log");
 	    FileHandler fh;
 	    try {
-	        fh = new FileHandler("C:\\Users\\karlc\\eclipse-workspace\\soen423-project\\src\\frontend\\logs\\server\\" + frontend_id + ".log");
+	        fh = new FileHandler("C:\\Users\\Waqar's PC\\Downloads\\Sample Source Code  Java IDL (CORBA)-20201013\\Reference Book\\soen423-project\\bin\\frontend\\logs\\server\\" + frontend_id + ".log");
 	        logger.addHandler(fh);
 	        SimpleFormatter formatter = new SimpleFormatter();
 	        fh.setFormatter(formatter);

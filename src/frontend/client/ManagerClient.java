@@ -35,7 +35,7 @@ public class ManagerClient {
 	    Logger logger = Logger.getLogger("client-log");
 	    FileHandler fh;
 	    try {
-	        fh = new FileHandler("C:\\Users\\karlc\\eclipse-workspace\\soen423-project\\src\\frontend\\logs\\client\\" + this.managerID + ".log");
+	        fh = new FileHandler("C:\\Users\\Waqar's PC\\Downloads\\Sample Source Code  Java IDL (CORBA)-20201013\\Reference Book\\soen423-project\\bin\\frontend\\logs\\client\\" + this.managerID + ".log");
 	        logger.addHandler(fh);
 	        SimpleFormatter formatter = new SimpleFormatter();
 	        fh.setFormatter(formatter);
