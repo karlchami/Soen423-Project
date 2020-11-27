@@ -116,6 +116,7 @@ public class ReplicaManager {
                 socket.receive(packet);
 
                 String message = new String(packet.getData(), packet.getOffset(), packet.getLength()).trim();
+                System.out.print(message);
                 int seq = new Request(message).getSequence_id();
 
                 if (seq == nextSeq) {

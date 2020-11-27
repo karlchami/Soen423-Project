@@ -143,13 +143,13 @@ public class frontendImpl extends frontendPOA  {
 	}
     
     public static void sendRequest(String message, InetAddress inet_address, int port) {
-        boolean received = false;
+        int received = 0;
         byte[] message_bytes = message.getBytes();
         DatagramPacket request = new DatagramPacket(message_bytes, message_bytes.length, inet_address, port);
         try (DatagramSocket sendSocket = new DatagramSocket()) {
             sendSocket.setSoTimeout(delay);
     		// Keeps listening until it gets a response, if no response comes in after delay, resend and wait again until received
-            while (!received) {
+            while (received < 2) {
                 sendSocket.send(request);
                 try {
                     byte[] buffer = new byte[1000];
@@ -158,10 +158,10 @@ public class frontendImpl extends frontendPOA  {
                     String response = new String(reply.getData()).trim();
                     // TODO: Agree on a reply message that denotes a received request
                     if (response.equals("received")) {
-                        received = true;
+                        received = 2;
                     }
                 } catch (SocketTimeoutException e) {
-                	continue;
+                	received++;
                 }
             }
         } catch (IOException ex) {
