@@ -52,6 +52,7 @@ public class Sequencer {
         DatagramPacket request = new DatagramPacket(buffer, buffer.length);
         sock.receive(request);
         System.out.print(new String(request.getData(), 0, request.getLength()));
+        sock.close();
         return new String(request.getData(), 0, request.getLength());
     }
 
