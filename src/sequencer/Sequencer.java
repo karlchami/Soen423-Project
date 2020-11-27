@@ -34,9 +34,9 @@ public class Sequencer {
     }
 
     private static void forwardRequest() {
-        try {
+        try (DatagramSocket socket = new DatagramSocket(4100)) {
             while (true) {
-                String request = receiveFE();
+                String request = receiveFE(socket);
                 String seqRequest = attachSequenceId(request);
                 multicastRequest(seqRequest);
             }
@@ -45,14 +45,15 @@ public class Sequencer {
         }
     }
 
-    private static String receiveFE() throws IOException {
-        DatagramSocket sock = new DatagramSocket(4100);
-
+    private static String receiveFE(DatagramSocket socket) throws IOException {
         byte[] buffer = new byte[1000];
         DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-        sock.receive(request);
-        System.out.print(new String(request.getData(), 0, request.getLength()));
-        sock.close();
+        socket.receive(request);
+
+        byte[] bytes = "received".getBytes();
+        DatagramPacket reply = new DatagramPacket(bytes, bytes.length, request.getAddress(), request.getPort());
+        socket.send(reply);
+
         return new String(request.getData(), 0, request.getLength());
     }
 
