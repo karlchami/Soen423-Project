@@ -255,6 +255,9 @@ public class frontendImpl extends frontendPOA  {
     	String response_message = null;
     	int correct_responses = 0;
     	
+    	// Store rm information with the rightmost element to be replica name instead of message
+    	ArrayList<Tuple<InetAddress, Integer, String>> received_rm_info = new ArrayList<Tuple<InetAddress, Integer, String>>();
+    	
     	// To get the response message majority
     	for(Tuple<InetAddress, Integer, String> single_rm : received_rm) {
     		// getName is the equivalent of getResponseMessage
@@ -267,6 +270,9 @@ public class frontendImpl extends frontendPOA  {
     		String[] response_details = this.decodeResponseDetails(decoded_response[2]);
     		String status_code = response_details[0];
     		String message = response_details[1];
+    		
+    		Tuple<InetAddress, Integer, String> rm_info_name = new Tuple<InetAddress, Integer, String>(single_rm.getInetAddress(), single_rm.getPort(), replica_id);
+    		received_rm_info.add(rm_info_name);
     		
     		// Comparison logic
     		if(correct_responses == 0) {
@@ -283,7 +289,7 @@ public class frontendImpl extends frontendPOA  {
     			// Take a copy of RM arraylist
     			ArrayList<Tuple<InetAddress, Integer, String>> crashed_rms = new ArrayList<Tuple<InetAddress, Integer, String>>(rm_info);
     			// Remove all non-defective RMs from crashed list
-    			crashed_rms.removeAll(received_rm);
+    			crashed_rms.removeAll(received_rm_info);
     	    	for(Tuple<InetAddress, Integer, String> rm : crashed_rms) {
     	    		notify_rm(rm.getInetAddress(), rm.getPort(), "CRASHED-RM");
     	    	}
