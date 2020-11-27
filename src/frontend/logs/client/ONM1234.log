@@ -1,2 +1,2 @@
-Nov 27, 2020 12:58:15 PM frontend.client.ManagerClient main
-INFO: Manager client with ID: ONM1234 attempt to add item: ON0000
+Nov 27, 2020 3:42:16 PM frontend.client.ManagerClient main
+INFO: Manager ONM1234 attempt to view available items

@@ -186,7 +186,7 @@ public class frontendImpl extends frontendPOA  {
     	ArrayList<Tuple<InetAddress, Integer, String>> received_rm = new ArrayList<Tuple<InetAddress, Integer, String>>(); 
     	// Determines whether we should keep receiving responses or not
     	boolean receive = true;
-    	socket.setSoTimeout(delay);
+    	socket.setSoTimeout(4000);
     	try {
     		while(receive) {
     			byte[] buffer = new byte[1000];

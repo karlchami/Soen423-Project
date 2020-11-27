@@ -63,8 +63,8 @@ public class StoreAgent {
                         String itemName = parameters.get("itemName").toString();
                         int quantity = Integer.parseInt(parameters.get("quantity").toString());
                         double price = Double.parseDouble(parameters.get("price").toString());
-
                         String responseMessage = store.addItem(managerID, itemID, itemName, quantity, price);
+                        System.out.print(responseMessage);
                         sendResponse(request, responseMessage);
                         break;
 
@@ -154,7 +154,7 @@ public class StoreAgent {
             InetAddress hostName = InetAddress.getByName("localhost"); // CHANGE TO FRONT-END HOST NAME
 
             byte[] bytes = responseString.getBytes();
-            DatagramPacket responsePacket = new DatagramPacket(bytes, bytes.length, hostName, 0); // CHANGE TO FE PORT
+            DatagramPacket responsePacket = new DatagramPacket(bytes, bytes.length, hostName, 5555); // CHANGE TO FE PORT
             socket.send(responsePacket);
 
             byte[] buffer = new byte[1000];

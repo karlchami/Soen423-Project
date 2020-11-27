@@ -1,2 +1,2 @@
-Nov 27, 2020 12:38:52 PM frontend.client.ManagerClient main
-INFO: Manager client with ID: QCM1234 attempt to add item: QC1234
+Nov 27, 2020 1:09:00 PM frontend.client.ManagerClient main
+INFO: Manager QCM1234 attempt to view available items
