@@ -47,8 +47,8 @@ public class frontendImpl extends frontendPOA  {
 			rm_info.add(new Tuple<InetAddress, Integer, String>(local_host, 3000, "karl"));
 			rm_info.add(new Tuple<InetAddress, Integer, String>(local_host, 3001, "waqar"));
 			rm_info.add(new Tuple<InetAddress, Integer, String>(local_host, 3002, "nick"));
-			// Set response delay (for reliable UDP)
-			delay = 999;
+			// Set response delay (for reliable UDP) in milliseconds
+			delay = 1000;
 									
 			log = startLogger();
 			log.info("Frontend started on port " + port);	
@@ -60,7 +60,7 @@ public class frontendImpl extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return getResponseMessage(response);
+			return response;
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -72,7 +72,7 @@ public class frontendImpl extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return getResponseMessage(response);
+			return response;
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -84,7 +84,7 @@ public class frontendImpl extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return getResponseMessage(response);
+			return response;
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -96,7 +96,7 @@ public class frontendImpl extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return getResponseMessage(response);
+			return response;
 		} catch (IOException e) {
 			return e.getMessage();
 		}	
@@ -108,7 +108,7 @@ public class frontendImpl extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return getResponseMessage(response);
+			return response;
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -120,7 +120,7 @@ public class frontendImpl extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return getResponseMessage(response);
+			return response;
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -132,7 +132,7 @@ public class frontendImpl extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return getResponseMessage(response);
+			return response;
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -144,7 +144,7 @@ public class frontendImpl extends frontendPOA  {
 		sendRequest(message, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
-			return getResponseMessage(response);
+			return response;
 		} catch (IOException e) {
 			return e.getMessage();
 		}
@@ -181,6 +181,15 @@ public class frontendImpl extends frontendPOA  {
         }
     }
     
+	public void sendMessageNoReply(String message, InetAddress address, int port) {
+        try (DatagramSocket sendSocket = new DatagramSocket()) {
+            byte[] resultBytes = message.getBytes();
+            DatagramPacket request = new DatagramPacket(resultBytes, resultBytes.length, address, port);
+            sendSocket.send(request);
+        } catch (IOException ex) {
+        }
+    }
+    
     private String recieve(DatagramSocket socket) throws IOException {
     	String response_message;
     	// Expected number of replies (RM info tuple size)
@@ -189,7 +198,7 @@ public class frontendImpl extends frontendPOA  {
     	ArrayList<Tuple<InetAddress, Integer, String>> received_rm = new ArrayList<Tuple<InetAddress, Integer, String>>(); 
     	// Determines whether we should keep receiving responses or not
     	boolean receive = true;
-    	// TODO: Add timer
+    	socket.setSoTimeout(delay);
     	try {
     		while(receive) {
     			byte[] buffer = new byte[1000];
@@ -202,7 +211,7 @@ public class frontendImpl extends frontendPOA  {
                 	received_rm.add(rm);
                 	// Sends back a reply to RM denoting that response is received
                 	// TODO: Agree on reply message
-                	sendRequest("received-response", response.getAddress(), response.getPort());
+                	sendMessageNoReply("received-response", response.getAddress(), response.getPort());
                 }
                 if(reply_count == received_rm.size()) {
                 	receive = false;
@@ -266,9 +275,7 @@ public class frontendImpl extends frontendPOA  {
     		
     		// Get all response information needed
     		String replica_id = decoded_response[0];
-    		String sequence_id = decoded_response[1];
     		String[] response_details = this.decodeResponseDetails(decoded_response[2]);
-    		String status_code = response_details[0];
     		String message = response_details[1];
     		
     		Tuple<InetAddress, Integer, String> rm_info_name = new Tuple<InetAddress, Integer, String>(single_rm.getInetAddress(), single_rm.getPort(), replica_id);
@@ -301,7 +308,6 @@ public class frontendImpl extends frontendPOA  {
         		String raw = single_rm.getName().trim();
         		String[] decoded = this.decodeResponse(raw);	
         		String[] details = this.decodeResponseDetails(decoded[2]);
-        		String code = details[0];
         		String msg = details[1];
         		
         		if( ( !response_message.equals(msg) ) ) {
@@ -310,7 +316,7 @@ public class frontendImpl extends frontendPOA  {
     		}
     	}
     	
-		return null;
+		return response_message;
     }
     
     // Notifies all RMs in multicast about a single RM failure
