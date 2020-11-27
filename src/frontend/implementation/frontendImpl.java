@@ -279,38 +279,39 @@ public class frontendImpl extends frontendPOA  {
     			correct_responses--;    			
     		}
     		
+    	}
+    		
     		// Detect crashed RMs aka RMs that didn't reply
-    		if(received_rm.size() < correct_responses) {
+    		if(received_rm.size() < 3) {
     			// Take a copy of RM arraylist
     			ArrayList<Tuple<InetAddress, Integer, String>> crashed_rms = new ArrayList<Tuple<InetAddress, Integer, String>>(rm_info);
     			// Remove all non-defective RMs from crashed list
     			crashed_rms.removeAll(received_rm_info);
     	    	for(Tuple<InetAddress, Integer, String> rm : crashed_rms) {
-    	    		notify_rm(rm.getInetAddress(), rm.getPort(), "CRASHED-RM");
+    	    		notify_rm(rm.getInetAddress(), rm.getPort(), "CRASHED-RM", rm.getName());
     	    	}
     		}
     		
     		// To notify failed RMs aka RMs that had a wrong response message or failed status code
     		for(Tuple<InetAddress, Integer, String> rm : received_rm) {
         		// getName is the equivalent of getResponseMessage
-        		String raw = single_rm.getName().trim();
+        		String raw = rm.getName().trim();
         		String[] decoded = this.decodeResponse(raw);	
         		String[] details = this.decodeResponseDetails(decoded[2]);
         		String msg = details[1];
         		
         		if( ( !response_message.equals(msg) ) ) {
-    	    		notify_rm(rm.getInetAddress(), rm.getPort(), "FAILED-RM");
+    	    		notify_rm(rm.getInetAddress(), rm.getPort(), "FAILED-RM", decoded[2]);
         		}
     		}
-    	}
     	
 		return response_message;
     }
     
     // Notifies all RMs in multicast about a single RM failure
-    private void notify_rm(InetAddress address, int port, String status) {
+    private void notify_rm(InetAddress address, int port, String status, String replica_name) {
     	for (Tuple<InetAddress, Integer, String> rm: rm_info) {
-    		String message = status + "," + address + "," + port;
+    		String message = replica_name + "," + status + "," + address + "," + port;
     		new Thread(() -> {
     			sendRequest(message, rm.getInetAddress(), rm.getPort());
             }).start();
