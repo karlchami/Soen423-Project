@@ -2,6 +2,7 @@ package frontend.client;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -14,14 +15,14 @@ import Models.Store;
 
 public class CustomerClient {
 	private ORB orb;	
-    private UUID uuid;
+    private String store;
 	private Logger logger;
 	private String customerID;
 
-	public CustomerClient(ORB orb, String customerID, UUID uuid) {
+	public CustomerClient(ORB orb, String customerID, String store) {
         this.orb = orb;
         this.customerID = customerID;
-        this.uuid = uuid;
+        this.store = store;
         this.logger = this.startLogger();
 	}
 	
@@ -41,6 +42,10 @@ public class CustomerClient {
 	        e.printStackTrace();
 	    }
 	    return logger;
+	}
+	
+	public String getStore() {
+		return this.store;
 	}
 	
 	public static void main(String args[]) {
@@ -67,8 +72,11 @@ public class CustomerClient {
         try{
       	  	ClientLauncher.initializeORB(args, store.toString());
       	  	ORB orb = ORB.init(args, null);
-            CustomerClient customer = new CustomerClient(orb, clientID, UUID.randomUUID());
-            frontend server = ClientLauncher.getFEInterface(orb, store.toString());
+            CustomerClient customer = new CustomerClient(orb, clientID, store.toString());
+            TimeUnit.SECONDS.sleep(1);
+            
+            String id = customer.getStore();
+            frontend server = ClientLauncher.getFEInterface(orb, id);
             int customerOption;
             String itemID;
             String inputDate;

@@ -188,15 +188,15 @@ public class frontendImpl extends frontendPOA  {
     	// Holds info about RMs that send UDP back to FE, used for tracking responses
     	ArrayList<Tuple<InetAddress, Integer, String>> received_rm = new ArrayList<Tuple<InetAddress, Integer, String>>(); 
     	// Determines whether we should keep receiving responses or not
-    	Boolean receive = true;
-    	
+    	boolean receive = true;
+    	// TODO: Add timer
     	try {
     		while(receive) {
     			byte[] buffer = new byte[1000];
                 DatagramPacket response = new DatagramPacket(buffer, buffer.length);
                 socket.receive(response);
                 // Add RM to received RMs tuple after receiving
-                Tuple<InetAddress, Integer, String> rm = new Tuple<InetAddress, Integer, String>(response.getAddress(), response.getPort(), new String(response.getData()));
+                Tuple<InetAddress, Integer, String> rm = new Tuple<InetAddress, Integer, String>(response.getAddress(), response.getPort(), new String(response.getData(), 0, response.getLength()));
                 
                 if (!received_rm.contains(rm)) {
                 	received_rm.add(rm);
@@ -271,6 +271,7 @@ public class frontendImpl extends frontendPOA  {
     		// Comparison logic
     		if(correct_responses == 0) {
     			response_message = message;
+    			correct_responses++;
     		} else if (response_message.equals(message)) {
     			correct_responses++;
     		} else {
@@ -297,7 +298,7 @@ public class frontendImpl extends frontendPOA  {
         		String code = details[0];
         		String msg = details[1];
         		
-        		if( ( !response_message.equals(msg) ) | ( code.equals("Failed")) ) {
+        		if( ( !response_message.equals(msg) ) ) {
     	    		notify_rm(rm.getInetAddress(), rm.getPort(), "FAILED-RM");
         		}
     		}
@@ -327,7 +328,7 @@ public class frontendImpl extends frontendPOA  {
 	    Logger logger = Logger.getLogger("frontend-log");
 	    FileHandler fh;
 	    try {
-	        fh = new FileHandler("frontend/logs/" + frontend_id + ".log");
+	        fh = new FileHandler("C:\\Users\\karlc\\eclipse-workspace\\soen423-project\\src\\frontend\\logs\\server\\" + frontend_id + ".log");
 	        logger.addHandler(fh);
 	        SimpleFormatter formatter = new SimpleFormatter();
 	        fh.setFormatter(formatter);
