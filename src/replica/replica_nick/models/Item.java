@@ -3,9 +3,9 @@ package replica.replica_nick.models;
 public class Item {
     private String name;
     private int quantity;
-    private double price;
+    private int price;
 
-    public Item(String name, int quantity, double price) {
+    public Item(String name, int quantity, int price) {
         this.name = name;
         this.quantity = quantity;
         this.price = price;
@@ -23,7 +23,7 @@ public class Item {
         return quantity;
     }
 
-    public double getPrice() {
+    public int getPrice() {
         return price;
     }
 

@@ -89,8 +89,7 @@ public class CustomerClient {
                         inputDate = in.promptDate();
                         response = server.purchaseItem(customer.customerID, itemID, inputDate);
 
-                        // TODO: Fix here
-                        if ("Out of stock".equals(response)) {
+                        if (response.contains("out of stock")) {
                             System.out.println("Item is out of stock, waitlist?");
                             String option = in.promptAny();
                             if (option.equals("y")) {

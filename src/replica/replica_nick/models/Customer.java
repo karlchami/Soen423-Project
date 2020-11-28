@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class Customer {
-    private double balance;
+    private int balance;
     private ArrayList<Purchase> purchases;
     private boolean qcLimitReached = false;
     private boolean onLimitReached = false;
@@ -16,15 +16,15 @@ public class Customer {
         purchases = new ArrayList<>();
     }
 
-    public double getBalance() {
+    public int getBalance() {
         return balance;
     }
 
-    public void increaseBalance(double amount) {
+    public void increaseBalance(int amount) {
         this.balance += amount;
     }
 
-    public void decreaseBalance(double amount) {
+    public void decreaseBalance(int amount) {
         this.balance -= amount;
     }
 
