@@ -1,4 +1,4 @@
-package replica.replica_nick.utility;
+package frontend.utils;
 
 import java.time.LocalDate;
 import java.util.Scanner;
@@ -8,11 +8,25 @@ public class UserInput {
 
     // region Prompt Methods
 
+    public String promptAny() {
+        return sc.nextLine();
+    }
+
+    public String promptStore() {
+        String store = sc.nextLine();
+
+        while (!validateStore(store)) {
+            System.out.println("Invalid store location. Please enter QC, ON, or BC.");
+            store = sc.nextLine();
+        }
+        return store.toUpperCase();
+    }
+
     public String promptManagerOptions() {
-        System.out.println("1. Add item\n" +
-                "2. Remove item\n" +
-                "3. List available items\n" +
-                "\nPlease enter the number of the action you want to perform:");
+//        System.out.println("1. Add item\n" +
+//                "2. Remove item\n" +
+//                "3. List available items\n" +
+//                "\nPlease enter the number of the action you want to perform:");
 
         String option = sc.nextLine();
 
@@ -24,11 +38,11 @@ public class UserInput {
     }
 
     public String promptCustomerOptions() {
-        System.out.println("1. Purchase item\n" +
-                "2. Find item\n" +
-                "3. Return item\n" +
-                "4. Exchange item\n" +
-                "\nPlease enter the number of the action you want to perform:");
+//        System.out.println("1. Purchase item\n" +
+//                "2. Find item\n" +
+//                "3. Return item\n" +
+//                "4. Exchange item\n" +
+//                "\nPlease enter the number of the action you want to perform:");
 
         String option = sc.nextLine();
 
@@ -40,18 +54,18 @@ public class UserInput {
     }
 
     public String promptUserID() {
-        System.out.println("Please enter your ID:");
+//        System.out.println("Please enter your ID:");
         String userID = sc.nextLine();
 
-        while (!validateUserID(userID)) {
-            System.out.println("Invalid user ID. Please try again.");
+        while (!validateUserIDNumber(userID)) {
+            System.out.println("Invalid user ID. Please enter a 4-digit number.");
             userID = sc.nextLine();
         }
         return userID.toUpperCase();
     }
 
     public String promptItemID() {
-        System.out.println("Please enter the item ID:");
+//        System.out.println("Please enter the item ID:");
         String itemID = sc.nextLine();
 
         while (!validateItemID(itemID)) {
@@ -66,13 +80,13 @@ public class UserInput {
         String itemName = sc.nextLine();
 
         while (!validateItemName(itemName)) {
-            System.out.println("Item names cannot contain underscores (_). Please try again.");
+            System.out.println("Item name cannot contain underscores, commas, or semicolons. Please try again.");
         }
         return itemName;
     }
 
     public int promptAddQuantity() {
-        System.out.println("Please enter the quantity to add:");
+//        System.out.println("Please enter the quantity to add:");
         int qty;
         try {
             qty = Integer.parseInt(sc.nextLine());
@@ -81,7 +95,7 @@ public class UserInput {
         }
 
         while (qty < 0) {
-            System.out.println("The quantity must be a number and cannot be negative. Please try again.");
+            System.out.println("The quantity must be a non-negative number. Please try again.");
             try {
                 qty = Integer.parseInt(sc.nextLine());
             } catch (NumberFormatException e) {
@@ -92,7 +106,7 @@ public class UserInput {
     }
 
     public int promptRemoveQuantity() {
-        System.out.println("Please enter the quantity to remove (enter -1 to completely remove the item from inventory):");
+//        System.out.println("Please enter the quantity to remove (enter -1 to completely remove the item from inventory):");
         int qty;
         try {
             qty = Integer.parseInt(sc.nextLine());
@@ -101,7 +115,7 @@ public class UserInput {
         }
 
         while (qty < -1) {
-            System.out.println("The quantity must be a number and cannot be negative. Please try again.");
+            System.out.println("The quantity must be a non-negative number. Please try again.");
             try {
                 qty = Integer.parseInt(sc.nextLine());
             } catch (NumberFormatException e) {
@@ -111,17 +125,17 @@ public class UserInput {
         return qty;
     }
 
-    public double promptPrice() {
-        System.out.println("Please enter the price of the item:");
-        double price;
+    public int promptPrice() {
+//        System.out.println("Please enter the price of the item:");
+        int price;
         try {
-            price = Double.parseDouble(sc.nextLine());
+            price = Integer.parseInt(sc.nextLine());
         } catch (NumberFormatException e) {
             price = -1;
         }
 
-        while (price < 0) {
-            System.out.println("The quantity must be a number and cannot be negative. Please try again.");
+        while (price <= 0) {
+            System.out.println("Price must be a positive integer. Please try again.");
             try {
                 price = Integer.parseInt(sc.nextLine());
             } catch (NumberFormatException e) {
@@ -132,7 +146,7 @@ public class UserInput {
     }
 
     public String promptDate() {
-        System.out.println("Please enter today's date in the format DD-MM-YYYY:");
+//        System.out.println("Please enter today's date in the format DD-MM-YYYY:");
         String date = sc.nextLine();
 
         while (!validateDate(date)) {
@@ -168,6 +182,10 @@ public class UserInput {
 
     // region Validate methods
 
+    private static boolean validateStore(String store) {
+        return store.equalsIgnoreCase("QC") || store.equalsIgnoreCase("ON") || store.equalsIgnoreCase("BC");
+    }
+
     private static boolean validateUserID(String userID) {
         if (userID.length() != 7) {
             return false;
@@ -189,6 +207,15 @@ public class UserInput {
         return true;
     }
 
+    private static boolean validateUserIDNumber(String userID) {
+        try {
+            Integer.parseInt(userID);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return userID.length() == 4;
+    }
+
     private static boolean validateItemID(String itemID) {
         if (itemID.length() != 6) {
             return false;
@@ -208,7 +235,7 @@ public class UserInput {
     }
 
     private static boolean validateItemName(String itemName) {
-        return !itemName.contains("_");
+        return !itemName.contains("_") && !itemName.contains(",") && !itemName.contains((";"));
     }
 
     private static boolean validateYesOrNo(String response) {

@@ -35,6 +35,7 @@ public class ClientLauncher {
 			NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
 			NameComponent[] path = ncRef.to_name("FrontEnd");
 			ncRef.rebind(path, href);
+			System.out.println("Frontend is running...");
 			orb.run();
 		}
 		catch(Exception ex) {

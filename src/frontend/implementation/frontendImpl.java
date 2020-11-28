@@ -46,13 +46,12 @@ public class frontendImpl extends frontendPOA {
         // Set response delay (for reliable UDP) in milliseconds
         delay = 1000;
 
-        log = startLogger();
-        log.info("Frontend started on port " + port);
+//        log = startLogger();
+//        log.info("Frontend started on port " + port);
     }
 
     public static void main(String[] args) {
         ClientLauncher.initializeORB(args);
-        System.out.println("Frontend is running...");
     }
 
     public String addItem(String managerID, String itemID, String itemName, int quantity, int price) {

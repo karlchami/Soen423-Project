@@ -7,6 +7,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import frontend.utils.UserInput;
 import org.omg.CORBA.ORB;
 
 import frontend.corba.frontend;
@@ -40,9 +41,10 @@ public class ManagerClient {
 
     public static void main(String[] args) {
         try {
-            Scanner scanner = new Scanner(System.in);
+            UserInput in = new UserInput();
+
             System.out.println("Choose store location:");
-            String input = scanner.next();
+            String input = in.promptStore();
             Store store = null;
             switch (input) {
                 case "BC":
@@ -57,16 +59,15 @@ public class ManagerClient {
 
             }
             System.out.println("Enter Manager ID: ");
-            String IDNumber = scanner.next();
+            String IDNumber = in.promptUserID();
             String clientID = store.toString() + "M" + IDNumber;
+            System.out.println("Manager ID: " + clientID);
 
             ORB orb = ORB.init(args, null);
             ManagerClient manager = new ManagerClient(clientID);
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.MILLISECONDS.sleep(100);
 
-            System.out.println("Manager ID: " + clientID);
             frontend server = ClientLauncher.getFEInterface(orb);
-            int customerOption;
             String itemID;
             String itemName;
             int price;
@@ -76,19 +77,19 @@ public class ManagerClient {
                 System.out.println("1. Add Item");
                 System.out.println("2. Remove Item ");
                 System.out.println("3. List Available Items ");
-                customerOption = scanner.nextInt();
+                int managerOption = Integer.parseInt(in.promptManagerOptions());
                 String response;
-                switch (customerOption) {
+                switch (managerOption) {
                     case 1:
                         System.out.println("----ADD ITEM----");
                         System.out.println("Enter ID:");
-                        itemID = scanner.next();
+                        itemID = in.promptItemID();
                         System.out.println("Enter name:");
-                        itemName = scanner.next();
+                        itemName = in.promptItemName();
                         System.out.println("Enter price:");
-                        price = scanner.nextInt();
+                        price = in.promptPrice();
                         System.out.println("Enter quantity:");
-                        quantity = scanner.nextInt();
+                        quantity = in.promptAddQuantity();
                         //manager.logger.info("Manager client with ID: " + manager.managerID + " attempt to add item: " + store + itemID);
                         response = server.addItem(manager.managerID, store + itemID, itemName, quantity, price);
                         System.out.println(response);
@@ -97,9 +98,9 @@ public class ManagerClient {
                     case 2:
                         System.out.println("----REMOVE ITEM----");
                         System.out.println("Enter ID:");
-                        itemID = scanner.next();
-                        System.out.println("Enter quantity:");
-                        quantity = scanner.nextInt();
+                        itemID = in.promptItemID();
+                        System.out.println("Enter quantity (enter -1 to completely remove item):");
+                        quantity = in.promptRemoveQuantity();
                         //manager.logger.info("Manager ID "+ manager.managerID + " attempt to remove item: " + store + itemID);
                         response = server.removeItem(manager.managerID, itemID, quantity);
                         System.out.println(response);

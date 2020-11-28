@@ -7,6 +7,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import frontend.utils.UserInput;
 import org.omg.CORBA.ORB;
 
 import frontend.corba.frontend;
@@ -39,9 +40,10 @@ public class CustomerClient {
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        UserInput in = new UserInput();
+
         System.out.println("Choose store location:");
-        String input = scanner.next();
+        String input = in.promptStore();
         Store store = null;
         switch (input) {
             case "BC":
@@ -56,16 +58,16 @@ public class CustomerClient {
 
         }
         System.out.println("Enter Customer ID: ");
-        String IDNumber = scanner.next();
+        String IDNumber = in.promptUserID();
         String clientID = store.toString() + "U" + IDNumber;
         System.out.println("Customer ID: " + clientID);
+
         try {
             ORB orb = ORB.init(args, null);
             CustomerClient customer = new CustomerClient(clientID);
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.MILLISECONDS.sleep(100);
 
             frontend server = ClientLauncher.getFEInterface(orb);
-            int customerOption;
             String itemID;
             String inputDate;
             String itemName;
@@ -77,20 +79,20 @@ public class CustomerClient {
                 System.out.println("2. Find Item ");
                 System.out.println("3. Return Item ");
                 System.out.println("4. Exchange Item ");
-                customerOption = scanner.nextInt();
+                int customerOption = Integer.parseInt(in.promptCustomerOptions());
                 switch (customerOption) {
                     case 1:
                         System.out.println("----PURCHASE ITEM----");
                         System.out.println("Enter item ID:");
-                        itemID = scanner.next();
-                        scanner.nextLine();
-                        System.out.println("Enter the date of purchase (MMMM dd, yyyy):");
-                        inputDate = scanner.nextLine();
+                        itemID = in.promptItemID();
+                        System.out.println("Enter the date of purchase (dd-MM-yyyy):");
+                        inputDate = in.promptDate();
                         response = server.purchaseItem(customer.customerID, itemID, inputDate);
+
                         // TODO: Fix here
                         if ("Out of stock".equals(response)) {
                             System.out.println("Item is out of stock, waitlist?");
-                            String option = scanner.next();
+                            String option = in.promptAny();
                             if (option.equals("y")) {
                                 server.addCustomerWaitList(customer.customerID, itemID);
                                 System.out.println("Successfully waitlisted. Item will be automatically bought when available.");
@@ -103,7 +105,7 @@ public class CustomerClient {
                     case 2:
                         System.out.println("----FIND ITEM----");
                         System.out.println("Enter item name:");
-                        itemName = scanner.next();
+                        itemName = in.promptItemName();
                         response = server.findItem(customer.customerID, itemName);
                         System.out.println(response);
                         //customer.logger.info(response);
@@ -111,10 +113,9 @@ public class CustomerClient {
                     case 3:
                         System.out.println("----RETURN ITEM----");
                         System.out.println("Enter item ID:");
-                        itemID = scanner.next();
-                        scanner.nextLine();
-                        System.out.println("Enter the return date (MMMM dd, yyyy):");
-                        inputDate = scanner.nextLine();
+                        itemID = in.promptItemID();
+                        System.out.println("Enter the return date (dd-MM-yyyy):");
+                        inputDate = in.promptDate();
                         response = server.returnItem(customer.customerID, itemID, inputDate);
                         System.out.println(response);
                         //customer.logger.info(response);
@@ -122,13 +123,11 @@ public class CustomerClient {
                     case 4:
                         System.out.println("----EXCHANGE ITEM ----");
                         System.out.println("Enter old item ID:");
-                        itemID = scanner.next();
-                        scanner.nextLine();
+                        itemID = in.promptItemID();
                         System.out.println("Enter new item ID:");
-                        newItemID = scanner.next();
-                        scanner.nextLine();
-                        System.out.println("Enter return date (MMMM dd, yyyy):");
-                        inputDate = scanner.nextLine();
+                        newItemID = in.promptItemID();
+                        System.out.println("Enter return date (dd-MM-yyyy):");
+                        inputDate = in.promptDate();
                         response = server.exchangeItem(customer.customerID, newItemID, itemID, inputDate);
                         System.out.println(response);
                         //customer.logger.info(response);
