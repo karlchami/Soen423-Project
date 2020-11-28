@@ -104,7 +104,9 @@ public class ONServer {
     private static void receiveFromRM(ONCommandsImpl obj) {
 
         String returnMessage = "";
+        int FEPort = 5555;
         try {
+            InetAddress FEHost = InetAddress.getByName("localhost");
             RMsocket = new DatagramSocket(3001);
             byte[] buffer = new byte[1000];
             while (true) {
@@ -136,7 +138,7 @@ public class ONServer {
                 }
 
                 String status_code = ""; // Will actually be set by parsing message
-                Request dumbo = new Request(sentence);
+                Request dumbo = new Request(sentence.split("-")[1]);
                 System.out.println(dumbo.getStore());
                 if(dumbo.getRequest_details().getMethod_name().equals("addItem")){
                     returnMessage = obj.addItem(
@@ -184,10 +186,14 @@ public class ONServer {
                         dumbo.getRequest_details().getMethod_name(), returnMessage, status_code);
                 Gson gson = new Gson();
                 String json = gson.toJson(response);
-                byte[] sendData = json.getBytes();
-                DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
-                        request.getPort());
-                RMsocket.send(reply);
+                if(!sentence.startsWith("R")) {
+                    byte[] sendData = json.getBytes();
+                    DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), FEHost,
+                            FEPort);
+                    RMsocket.send(reply);
+                }else{
+                    return;
+                }
             }
         } catch (Exception e) {
             System.out.println(e);

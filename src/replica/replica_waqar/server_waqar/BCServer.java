@@ -105,7 +105,9 @@ public class BCServer {
     private static void receiveFromRM(BCCommandsImpl obj) {
 
         String returnMessage = "";
+        int FEPort = 5555;
         try {
+            InetAddress FEHost = InetAddress.getByName("localhost");
             RMsocket = new DatagramSocket(3002);
             byte[] buffer = new byte[1000];
             while (true) {
@@ -135,7 +137,7 @@ public class BCServer {
                     RMsocket.close();
                     return;
                 }
-                Request dumbo = new Request(sentence);
+                Request dumbo = new Request(sentence.split("-")[1]);
                 String status_code = ""; // Will actually be set by parsing message
 
                 if(dumbo.getRequest_details().getMethod_name().equals("addItem")){
@@ -184,10 +186,14 @@ public class BCServer {
                         dumbo.getRequest_details().getMethod_name(), returnMessage, status_code);
                 Gson gson = new Gson();
                 String json = gson.toJson(response);
-                byte[] sendData = json.getBytes();
-                DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
-                        request.getPort());
-                RMsocket.send(reply);
+                if(!sentence.startsWith("R")) {
+                    byte[] sendData = json.getBytes();
+                    DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), FEHost,
+                            FEPort);
+                    RMsocket.send(reply);
+                }else{
+                    return;
+                }
             }
         } catch (Exception e) {
             System.out.println(e);

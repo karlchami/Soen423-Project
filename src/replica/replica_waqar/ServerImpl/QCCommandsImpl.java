@@ -56,17 +56,13 @@ public class QCCommandsImpl{
             qty = emptyWaitlist(itemID, qty);
             System.out.println(qty);
             Stock.get(itemID).setItemQty(Stock.get(itemID).getItemQty()+qty);
-            String logMessage = "\na("+ (returnTimeStamp()) + ") "+"addItem Executed on existing item by " + managerID + " | Modifications successfully made to Server QC | " +
-                    "Updated Values \n ID | Item Name | Qty \n" + this.Stock.get(itemID).getItemID() + " | " + this.Stock.get(itemID).getItemName() + " | "
-                    + this.Stock.get(itemID).getItemQty()  + " | " +  this.Stock.get(itemID).getPrice()+ "\n\n";
+            String logMessage = managerID + " - Success. Added " + qty + " units of item " + itemID + " to inventory.";
             writeLog(logMessage);
             return stripNonValidXMLCharacters(logMessage);
         }catch(Exception e) {
             Stock.put(itemID, new Item(itemID.substring(2, 6), itemName, itemID.substring(0, 2), qty, price));
             this.Stock.get(itemID);
-            String logMessage = "\na("+ (returnTimeStamp()) + ") "+"addItem Executed on newly added item by " + managerID + " | Modifications successfully made to Server QC | " +
-                    "Updated Values \n ID | Item Name | Qty \n" + this.Stock.get(itemID).getItemID() + " | " + this.Stock.get(itemID).getItemName() + " | "
-                    + this.Stock.get(itemID).getItemQty()  + " | " +  this.Stock.get(itemID).getPrice()+ "\n\n";
+            String logMessage = managerID + " - Success. Added " + qty + " units of NEW item " + itemID + " to inventory.";
             try{
                 writeLog(logMessage);
             }catch (Exception en) {}
@@ -101,28 +97,22 @@ public class QCCommandsImpl{
             int currentQuantity = Stock.get(itemID).getItemQty();
             if(qty == -1){
                 Stock.remove(itemID);
-                String returnMessage = "("+ (returnTimeStamp()) + ") "+"removeItem Executed on existing item by " + managerID
-                        + " | Modifications made to Server QC | Item Deleted "+"\n\n";
+                String returnMessage = managerID + " - Success. Completely removed item " + itemID + " from inventory.";
                 writeLog(returnMessage);
                 return stripNonValidXMLCharacters(returnMessage);
             }
             if(currentQuantity<qty){
-                String returnMessage = "("+ (returnTimeStamp()) + ") "+"removeItem Executed on existing item by " + managerID
-                        + " | Modifications not made to Server QC | Desired Removal " + qty
-                        + " higher than current quantity: " + currentQuantity +"\n\n";
+                String returnMessage = managerID + " - Failed to remove item " + itemID
+                        + ". Quantity entered must not exceed the current quantity in stock.";
                 writeLog(returnMessage);
                 return stripNonValidXMLCharacters(returnMessage);
             }
             Stock.get(itemID).setItemQty(Stock.get(itemID).getItemQty()-qty);
-            String returnMessage = "("+ (returnTimeStamp()) + ") "+"removeItem Executed on existing item by " + managerID
-                    + " | Modifications successfully made to Server QC |"+
-                    "Updated Values \n ID | Item Name | Qty \n" + this.Stock.get(itemID).getItemID() + " | " + this.Stock.get(itemID).getItemName() + " | "
-                    + this.Stock.get(itemID).getItemQty()  + " | " +  this.Stock.get(itemID).getPrice()+ "\n\n";
+            String returnMessage = managerID + " - Success. Removed " + qty + " units of item " + itemID + " from inventory.";
             writeLog(returnMessage);
             return stripNonValidXMLCharacters(returnMessage);
         }catch(Exception e){
-            String returnMessage = "("+ (returnTimeStamp()) + ") "+"removeItem Executed on by " + managerID
-                    + " | Modifications made to Server QC | Desired Item was not or is no longer in store stock \n\n";
+            String returnMessage = managerID + " - Failed to remove item " + itemID + ". Item does not exist.";
             return stripNonValidXMLCharacters(returnMessage);
         }
     }
@@ -130,10 +120,11 @@ public class QCCommandsImpl{
     public String listItemAvailability(String managerID) {
         System.out.println(validateManager(managerID));
         if (validateManager(managerID)){
-            String items = "ID | Item Name | Qty \n";
+            String items = "";
             for (String i : this.Stock.keySet()){
-                items = items.concat(this.Stock.get(i).getItemID() + " | " + this.Stock.get(i).getItemName() + " | "
-                        + this.Stock.get(i).getItemQty() + "\n\n");
+                items = items.concat(this.Stock.get(i).getStoreID() + this.Stock.get(i).getItemID() + "," +
+                        this.Stock.get(i).getItemName() + "," + this.Stock.get(i).getItemQty() + ","
+                        + this.Stock.get(i).getPrice() + ";");
             }
             return stripNonValidXMLCharacters("("+ (returnTimeStamp()) + ") "+items);
 
@@ -149,9 +140,9 @@ public class QCCommandsImpl{
 
     public String purchaseItem(String customerID, String itemID, String dateOfPurchase) {
         String logID = itemID;
-        if(OwnsItem(customerID,itemID)){
-            return "Customer already owns this item";
-        }
+//        if(OwnsItem(customerID,itemID)){
+//            return "Customer already owns this item";
+//        }
         try{
             String locallyAvailable = purchaseLocalItem(customerID,itemID);
                 if(!locallyAvailable.startsWith("410")){
@@ -177,9 +168,13 @@ public class QCCommandsImpl{
                         writeLog(logMessage);
                         return stripNonValidXMLCharacters(BCItem);
                     }
-                    if(BCItem.startsWith("41010") || ONItem.startsWith("41010")|| locallyAvailable.startsWith("41010")){
-                        return "You have already used your one purchase at this foreign store per company policy";
+                    if(ONItem.trim().equals("410") || BCItem.trim().equals("410")|| locallyAvailable.trim().equals("410")){
+                        return customerID + " - Failed to purchase item " + itemID + ". There are no items with this ID.";
                     }
+                    if(BCItem.startsWith("41010") || ONItem.startsWith("41010")|| locallyAvailable.startsWith("41010")){
+                        return customerID + " - Failed to purchase item " + itemID + ". You have reached your 1 item limit for the " + itemID.substring(0,2) + " store.";
+                    }
+
             }
             writeLog("Purchase request by " + customerID +". There is no stock for this item in any of our stores. Item ID: "+ itemID  + " \n" + "Customer added to waitlist");
             addToWaitList(customerID,logID);
@@ -201,15 +196,14 @@ public class QCCommandsImpl{
 
         if(enoughStock(itemID)) {
             if(!dealWithBudget(customerID, itemID)){
-                return "Customer does not have enough balance for this purchase";
+                return customerID + " - Failed to purchase item " + itemID + ". Insufficient funds.";
             }
             if(!firstShop(customerID))
                 return "41010";
             Stock.get(itemID).setItemQty(Stock.get(itemID).getItemQty() - 1);
             Purchases.add(new Purchase(itemID, Stock.get(itemID).getPrice(),customerID));
-            String returnMessage = "("+ (returnTimeStamp()) + ") "+"Sale successful. Updated Stock for this item \n ID | Item Name | Qty \n" + this.Stock.get(itemID).getItemID()
-                    + " | " + this.Stock.get(itemID).getItemName() + " | "
-                    + this.Stock.get(itemID).getItemQty()  + " | " +  this.Stock.get(itemID).getPrice()+ "\n";
+            String returnMessage = customerID + " - Success. You have purchased a " + Stock.get(itemID).getItemName()
+                    + " (" + itemID + ") for $" + Stock.get(itemID).getPrice();
             return returnMessage;
         }else{
             return("410");
@@ -237,7 +231,7 @@ public class QCCommandsImpl{
         try{
             if (returnPossible(dateOfReturn)){
                 if(!OwnsItem(customerID,itemID)){
-                    return "Customer does not own this item";
+                    return customerID + " - Failed to return item " + itemID + ". Could not find purchase.";
                 }
                 if(itemID.substring(0,2).equals("QC")){
                     String QCItem = sendUDP(2003, customerID, itemID,"returnItem",0,"");
@@ -267,12 +261,12 @@ public class QCCommandsImpl{
                 }
 
             }else{
-                return "("+ (returnTimeStamp()) + ") "+"Return no longer possible. This article is not covered under the return policy";
+                return customerID + " - Failed to return item " + itemID + ". You must return items within 30 days of purchase.";
             }
         }catch(Exception e){
             e.printStackTrace();
         }
-        return new String("400");
+        return new String(customerID + " - Failed to return item " + itemID + ". Could not find purchase.");
     }
 
     synchronized public String returnLocalStock(String customerID, String itemID){
@@ -281,12 +275,13 @@ public class QCCommandsImpl{
             qty = emptyWaitlist(itemID, qty);
             if(qty == 0){
                 removeLocalSale(customerID,itemID);
-                return "Return Successful, the item was assigned to a client on the waitlist";
+                return customerID + " - Success. You have returned " + itemID + " for $" + this.Stock.get(itemID).getPrice();
             }
             this.Stock.get(itemID).setItemQty(this.Stock.get(itemID).getItemQty()+qty);
-            String returnMessage = "("+ (returnTimeStamp()) + ") "+"Return successful. Updated Stock for this item \n ID | Item Name | Qty \n" + this.Stock.get(itemID).getItemID()
-                    + " | " + this.Stock.get(itemID).getItemName() + " | "
-                    + this.Stock.get(itemID).getItemQty() + "\n";
+
+            String returnMessage = customerID + " - Success. You have returned " + itemID + " for $"
+                    + this.Stock.get(itemID).getPrice();
+
             System.out.println(returnMessage);
             removeLocalSale(customerID,itemID);
             return returnMessage;
@@ -294,9 +289,8 @@ public class QCCommandsImpl{
             e.printStackTrace();
             this.Stock.put(itemID,new Item(itemID.substring(2,6), "No Longer Sold Return", "QC",1, 100000));
         }
-        String returnMessage = "("+ (returnTimeStamp()) + ") "+"Return successful. Item stocked, but no longer in regular sale items Price adjusted until manager input \n ID | Item Name | Qty \n"
-                + this.Stock.get(itemID).getItemID() + " | " + this.Stock.get(itemID).getItemName() + " | "
-                + this.Stock.get(itemID).getItemQty() + "\n";
+        String returnMessage = customerID + " - Success. You have returned item + " + itemID + " (discontinued) for $"
+                + this.Stock.get(itemID).getPrice();;
         removeLocalSale(customerID,itemID);
         return returnMessage;
     }
@@ -361,8 +355,8 @@ public class QCCommandsImpl{
         String localItem;
         try {
             itemID = "QC" + itemID;
-            localItem = itemID + " | " + this.Stock.get(itemID).getItemName() + " | "
-                    + this.Stock.get(itemID).getItemQty() + "\n";
+            localItem = itemID + "," + this.Stock.get(itemID).getItemName() + ","
+                    + this.Stock.get(itemID).getItemQty() + "," + this.Stock.get(itemID).getPrice() + ";";
         }catch (Exception e){
             System.out.println(e);
             e.printStackTrace();
@@ -473,8 +467,8 @@ public class QCCommandsImpl{
 
     public static boolean returnPossible(String formattedDate){
         int day = Integer.parseInt(formattedDate.substring(0,2));
-        int month = Integer.parseInt(formattedDate.substring(2,4));
-        int year = Integer.parseInt(formattedDate.substring(4,8));
+        int month = Integer.parseInt(formattedDate.substring(3,5));
+        int year = Integer.parseInt(formattedDate.substring(6,10));
         LocalDate oldTime = LocalDate.of(year, month, day);
         LocalDate maxReturnDate  = LocalDate.now().plusDays(30);
         boolean isPossible = maxReturnDate.isAfter(oldTime);
@@ -509,24 +503,24 @@ public class QCCommandsImpl{
             int newPrice = getNewItemPrice(itemID,customerID);
             boolean ownsItem = OwnsItem(customerID,oldItemID);
             boolean hasBudget = hasExchangeBudget(customerID, itemID, price, newPrice);
+            if(!ownsItem){
+                return customerID + " - Failed to return item " + itemID + ". Could not find purchase.";
+            }
             if(!returnPossible(dateOfExchange)){
-                return "Return no longer possible. This article is not covered under the return policy";
+                return customerID + " - Failed to return item " + itemID + ". You must return items within 30 days of purchase.";
             }
             if(newPrice == -1 || newPrice == 0){
-                return "The product you are trying to exchange for is not in stock";
-            }
-            if(!ownsItem){
-                return "Customer does not own the item already";
+                return customerID + " - Failed to purchase item " + itemID + ". Item is out of stock.";
             }
             if(!hasBudget){
-                return "Budget not available for this exchange.";
+                return customerID + " - Failed to purchase item " + itemID + ". Insufficient funds.";
             }
             if(customerID.substring(0,2).equals("QC")){
                 returnItem(customerID,oldItemID,returnCurrentTime());
                 String purchaseMessage = purchaseItem(customerID,itemID,returnCurrentTime()).trim();
                 System.out.println(purchaseMessage);
-                if(purchaseMessage.startsWith("(")){
-                    return "Item Exchanged";
+                if(purchaseMessage.contains("Success")){
+                    return customerID + " - Success. You have exchanged item " + oldItemID + " for item " + itemID + ".";
                 }else{
                     return stripNonValidXMLCharacters(purchaseMessage);
                 }
@@ -534,8 +528,8 @@ public class QCCommandsImpl{
                 if(returnFirstShop(customerID,itemID)){
                     returnItem(customerID,oldItemID,returnCurrentTime());
                     String purchaseMessage = purchaseItem(customerID,itemID,returnCurrentTime());
-                    if(purchaseMessage.startsWith("(")){
-                        return "Item Exchanged";
+                    if(purchaseMessage.contains("Success")){
+                        return customerID + " - Success. You have exchanged item " + oldItemID + " for item " + itemID + ".";
                     }else{
                         return stripNonValidXMLCharacters(purchaseMessage);
                     }
@@ -543,13 +537,13 @@ public class QCCommandsImpl{
                     if(itemID.substring(0,2).equals(oldItemID.substring(0,2))){
                         returnItem(customerID,oldItemID,returnCurrentTime());
                         String purchaseMessage = purchaseItem(customerID,itemID,returnCurrentTime());
-                        if(purchaseMessage.startsWith("(")){
-                            return "Item Exchanged";
+                        if(purchaseMessage.contains("Success")){
+                            return customerID + " - Success. You have exchanged item " + oldItemID + " for item " + itemID + ".";
                         }else{
                             return stripNonValidXMLCharacters(purchaseMessage);
                         }
                     }else{
-                        return "Exchange not possible while respecting return foreign-purchase limits";
+                        return customerID + " - Exchange failed. " + "Failed to purchase item " + itemID + ". You have reached your 1 item limit for the " + itemID.substring(0,2) + " store.";
                     }
                 }
 

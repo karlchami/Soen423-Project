@@ -37,6 +37,12 @@ public class ReplicaManager {
             Thread thread = new Thread(task);
             thread.start();
 
+            Runnable task2 = () -> {
+                receive();
+            };
+            Thread thread2 = new Thread(task2);
+            thread2.start();
+
 
         } catch (Exception e) {
         }
@@ -196,6 +202,7 @@ public class ReplicaManager {
         for(int i=0; i<received_commands.size();i++) {
             String sentence = received_commands.get(i);
             Request dumbo = new Request(sentence);
+            sentence = "R-" + sentence;
             if (dumbo.getStore().equals("QC")) {
                 System.out.println("Resent");;
                 System.out.println(sendUDP(3003, sentence));
@@ -295,12 +302,6 @@ public class ReplicaManager {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 socket.receive(request);
                 String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
-//                System.out.println("Received : " + sentence);
-                if (sentence.equals("KILL")) {
-                    restartAll();
-                    resendMessages();
-                    continue;
-                }
 
                 handleRequest(sentence);
 
@@ -337,24 +338,19 @@ public class ReplicaManager {
         DatagramSocket socket = null;
         String returnMessage = "";
         try {
-            socket = new DatagramSocket(2004);
+            socket = new DatagramSocket(2020);
             byte[] buffer = new byte[1000];
             while (true) {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 socket.receive(request);
                 String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
-                String[] split = sentence.split("-");
-                //action+"-"+username+"-"+itemId+"-"+cost"-"+oldItem
-                System.out.println("Function Received " + split[0]);
-                if (split[0].equals("Restart")) {
-
+                System.out.println("Function Received " + sentence);
+                if (sentence.equals("restart")) {
+                    restartAll();
+                    resendMessages();
+                    returnMessage = "restarted";
                 }
-                if (split[0].equals("SendForward")) {
 
-                }
-                if (split[0].equals("GetMessage")) {
-
-                }
                 byte[] sendData = returnMessage.getBytes();
                 DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), request.getAddress(),
                         request.getPort());
