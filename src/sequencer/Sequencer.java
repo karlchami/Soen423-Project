@@ -28,6 +28,8 @@ public class Sequencer {
             Thread rmThread = new Thread(rmTask);
             rmThread.start();
 
+            System.out.println("Sequencer is running...");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
