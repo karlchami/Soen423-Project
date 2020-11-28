@@ -14,16 +14,12 @@ import frontend.utils.ClientLauncher;
 import Models.Store;
 
 public class CustomerClient {
-	private ORB orb;	
-    private String store;
 	private Logger logger;
 	private String customerID;
 
-	public CustomerClient(ORB orb, String customerID, String store) {
-        this.orb = orb;
+	public CustomerClient(String customerID) {
         this.customerID = customerID;
-        this.store = store;
-        this.logger = this.startLogger();
+//        this.logger = this.startLogger();
 	}
 	
 	// Handles logging
@@ -44,9 +40,9 @@ public class CustomerClient {
 	    return logger;
 	}
 	
-	public String getStore() {
-		return this.store;
-	}
+//	public String getStore() {
+////		return this.store;
+////	}
 	
 	public static void main(String args[]) {
 		Scanner scanner = new Scanner(System.in);
@@ -70,13 +66,11 @@ public class CustomerClient {
         String clientID = store.toString() + "U" + IDNumber;
         System.out.println("Customer ID: " + clientID);
         try{
-      	  	ClientLauncher.initializeORB(args, store.toString());
       	  	ORB orb = ORB.init(args, null);
-            CustomerClient customer = new CustomerClient(orb, clientID, store.toString());
+            CustomerClient customer = new CustomerClient(clientID);
             TimeUnit.SECONDS.sleep(1);
-            
-            String id = customer.getStore();
-            frontend server = ClientLauncher.getFEInterface(orb, id);
+
+            frontend server = ClientLauncher.getFEInterface(orb);
             int customerOption;
             String itemID;
             String inputDate;
@@ -110,7 +104,7 @@ public class CustomerClient {
                                 }
                                 break;
                             default:
-                            	customer.logger.info(response);
+                            	//customer.logger.info(response);
                                 System.out.println(response);
                                 break;
                         }
@@ -121,7 +115,7 @@ public class CustomerClient {
                         itemName = scanner.next();
                         response = server.findItem(customer.customerID,itemName);
                         System.out.println(response);
-                        customer.logger.info(response);
+                        //customer.logger.info(response);
                         break;
                     case 3:
                         System.out.println("----RETURN ITEM----");
@@ -132,7 +126,7 @@ public class CustomerClient {
                         inputDate = scanner.nextLine();
                         response = server.returnItem(customer.customerID,itemID,inputDate);
                         System.out.println(response);
-                        customer.logger.info(response);
+                        //customer.logger.info(response);
                         break;
                     case 4:
                         System.out.println("----EXCHANGE ITEM ----");
@@ -146,7 +140,7 @@ public class CustomerClient {
                         inputDate = scanner.nextLine();
                         response = server.exchangeItem(customer.customerID, newItemID, itemID, inputDate);
                         System.out.println(response);
-                        customer.logger.info(response);
+                        //customer.logger.info(response);
                     }
                 }
             } catch (Exception e) {

@@ -14,21 +14,17 @@ import frontend.utils.ClientLauncher;
 import Models.Store;
 
 public class ManagerClient {
-	private ORB orb;	
-    private String store;
 	private Logger logger;
 	private String managerID;
 
-	public ManagerClient(ORB orb, String managerID, String store) {
-        this.orb = orb;
-        this.store = store;
+	public ManagerClient(String managerID) {
         this.managerID = managerID;
-        this.logger = this.startLogger();
+//        this.logger = this.startLogger();
 	}
 	
-	public String getStore() {
-		return this.store;
-	}
+//	public String getStore() {
+//		return this.store;
+//	}
 	
 	// Handles logging
 	public Logger startLogger() {
@@ -69,15 +65,13 @@ public class ManagerClient {
 	        System.out.println("Enter Manager ID: ");
 	        String IDNumber = scanner.next();
 	        String clientID = store.toString() + "M" + IDNumber;
-	    	
-	  	  	ClientLauncher.initializeORB(args, store.toString());
+
 	  	  	ORB orb = ORB.init(args, null);
-	        ManagerClient manager = new ManagerClient(orb, clientID, store.toString());
+	        ManagerClient manager = new ManagerClient(clientID);
 	        TimeUnit.SECONDS.sleep(1);
 	        
 	        System.out.println("Manager ID: " + clientID);
-            String id = manager.getStore();
-            frontend server = ClientLauncher.getFEInterface(orb, id);
+            frontend server = ClientLauncher.getFEInterface(orb);
             int customerOption;
             String itemID;
             String itemName;
@@ -101,7 +95,7 @@ public class ManagerClient {
                         price = scanner.nextInt();
                         System.out.println("Enter quantity:");
                         quantity = scanner.nextInt();
-                        manager.logger.info("Manager client with ID: " + manager.managerID + " attempt to add item: " + store + itemID);
+                        //manager.logger.info("Manager client with ID: " + manager.managerID + " attempt to add item: " + store + itemID);
                         response = server.addItem(manager.managerID, store + itemID, itemName, quantity, price);
                         System.out.println(response);
                         System.out.printf("%n");
@@ -112,14 +106,14 @@ public class ManagerClient {
                         itemID = scanner.next();
                         System.out.println("Enter quantity:");
                         quantity = scanner.nextInt();
-                        manager.logger.info("Manager ID "+ manager.managerID + " attempt to remove item: " + store + itemID);
+                        //manager.logger.info("Manager ID "+ manager.managerID + " attempt to remove item: " + store + itemID);
                         response = server.removeItem(manager.managerID, itemID, quantity);
                         System.out.println();
                         System.out.printf("%n");
                         break;
                     case 3:
                         System.out.println("----LIST AVAILABE ITEMS----");
-                        manager.logger.info("Manager "+ manager.managerID + " attempt to view available items");
+                        //manager.logger.info("Manager "+ manager.managerID + " attempt to view available items");
                         response = server.listItemAvailability(manager.managerID);
                         System.out.println(response);
                         break;

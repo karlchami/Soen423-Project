@@ -2,7 +2,6 @@ package frontend.implementation;
 
 import java.net.*;
 import java.util.ArrayList;
-import java.util.ResourceBundle;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -10,6 +9,7 @@ import java.io.*;
 import java.rmi.AlreadyBoundException;
 
 import Models.response.Response;
+import frontend.utils.ClientLauncher;
 import org.omg.CORBA.*;
 
 import frontend.corba.frontendPOA;
@@ -21,7 +21,6 @@ import frontend.utils.RequestBuilder;
 public class frontendImpl extends frontendPOA  {
 
 	private org.omg.CORBA.ORB orb = null;
-	private String frontend_id;
 	private Logger log = null;
 	
 	// Local
@@ -37,11 +36,10 @@ public class frontendImpl extends frontendPOA  {
 	private ArrayList<Tuple<InetAddress, Integer, String>> rm_info = new ArrayList<Tuple<InetAddress, Integer, String>>();
 	private static int delay;
 	
-	public frontendImpl(ORB orb, String frontend_id) throws AlreadyBoundException, IOException {
+	public frontendImpl(ORB orb) throws AlreadyBoundException, IOException {
 			super();
 		
 			this.orb = orb;
-			this.frontend_id = frontend_id;
 			this.socket = new DatagramSocket(this.port);
 			
 			// Add RM info to tuple
@@ -53,12 +51,16 @@ public class frontendImpl extends frontendPOA  {
 			// Set response delay (for reliable UDP) in milliseconds
 			delay = 1000;
 									
-			log = startLogger();
-			log.info("Frontend started on port " + port);	
+//			log = startLogger();
+//			//log.info("Frontend started on port " + port);	
+	}
+
+	public static void main(String[] args) {
+		ClientLauncher.initializeORB(args);
 	}
 	
 	public String addItem(String managerID, String itemID, String itemName, int quantity, int price) {
-		String request = RequestBuilder.addItemRequest(managerID, itemID, itemName, quantity, price, this.frontend_id);
+		String request = RequestBuilder.addItemRequest(managerID, itemID, itemName, quantity, price);
 		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
@@ -69,7 +71,7 @@ public class frontendImpl extends frontendPOA  {
 	}
 
 	public String removeItem(String managerID, String itemID, int quantity) {
-		String request = RequestBuilder.removeItemRequest(managerID, itemID, quantity, this.frontend_id);
+		String request = RequestBuilder.removeItemRequest(managerID, itemID, quantity);
 		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
@@ -80,7 +82,7 @@ public class frontendImpl extends frontendPOA  {
 	}
 	
 	public String listItemAvailability(String managerID){	
-		String request = RequestBuilder.listItemAvailabilityRequest(managerID, this.frontend_id);
+		String request = RequestBuilder.listItemAvailabilityRequest(managerID);
 		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
@@ -91,7 +93,7 @@ public class frontendImpl extends frontendPOA  {
 	}
 	
 	public String purchaseItem(String customerID, String itemID, String dateOfPurchase) {
-		String request = RequestBuilder.purchaseItemRequest(customerID, itemID, dateOfPurchase, this.frontend_id);
+		String request = RequestBuilder.purchaseItemRequest(customerID, itemID, dateOfPurchase);
 		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
@@ -102,7 +104,7 @@ public class frontendImpl extends frontendPOA  {
 	}
 	
 	public String findItem(String customerID, String itemName) {
-		String request = RequestBuilder.findItemRequest(customerID, itemName, this.frontend_id);
+		String request = RequestBuilder.findItemRequest(customerID, itemName);
 		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
@@ -113,7 +115,7 @@ public class frontendImpl extends frontendPOA  {
 	}
 		
 	public String returnItem (String customerID, String itemID, String dateOfReturn) {	
-		String request = RequestBuilder.returnItemRequest(customerID, itemID, dateOfReturn, this.frontend_id);
+		String request = RequestBuilder.returnItemRequest(customerID, itemID, dateOfReturn);
 		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
@@ -124,7 +126,7 @@ public class frontendImpl extends frontendPOA  {
 	}	
 	
 	public String exchangeItem(String customerID, String newItemID, String oldItemID, String dateOfExchange) {
-		String request = RequestBuilder.exchangeItemRequest(customerID, newItemID, oldItemID, dateOfExchange, this.frontend_id);
+		String request = RequestBuilder.exchangeItemRequest(customerID, newItemID, oldItemID, dateOfExchange);
 		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
@@ -135,7 +137,7 @@ public class frontendImpl extends frontendPOA  {
 	}
 		
 	public String addCustomerWaitList(String customerID, String itemID) {
-		String request = RequestBuilder.addCustomerWaitListRequest(customerID, itemID, this.frontend_id);
+		String request = RequestBuilder.addCustomerWaitListRequest(customerID, itemID);
 		sendRequest(request, sequencer_address, sequencer_port);
 		try {
 			String response = recieve(socket);
@@ -182,7 +184,7 @@ public class frontendImpl extends frontendPOA  {
     }
     
     private String recieve(DatagramSocket socket) throws IOException {
-		log.info("inside");
+		//log.info("inside");
     	String response_message;
     	// Expected number of replies (RM info tuple size)
     	int reply_count = rm_info.size();  	
@@ -193,14 +195,14 @@ public class frontendImpl extends frontendPOA  {
     	socket.setSoTimeout(12000);
     	try {
     		while(receive) {
-    			log.info("here");
+    			//log.info("here");
     			byte[] buffer = new byte[1000];
                 DatagramPacket response = new DatagramPacket(buffer, buffer.length);
                 socket.receive(response);
                 // Add RM to received RMs tuple after receiving
 
                 Tuple<InetAddress, Integer, String> rm = new Tuple<InetAddress, Integer, String>(response.getAddress(), response.getPort(), new String(response.getData(), 0, response.getLength()));
-                log.info(new String(response.getData()));
+                //log.info(new String(response.getData()));
                 if (!received_rm.contains(rm)) {
                 	received_rm.add(rm);
                 	// Sends back a reply to RM denoting that response is received
@@ -224,7 +226,7 @@ public class frontendImpl extends frontendPOA  {
         } catch (IOException ex) {
         	throw ex;
         } catch (Exception ex) {
-    		log.info("Crashed" + ex.getMessage());
+    		//log.info("Crashed" + ex.getMessage());
 			throw ex;
 		}
     }
@@ -246,7 +248,7 @@ public class frontendImpl extends frontendPOA  {
     
     public String[] decodeResponseDetails(String JSONString) {
     	// [status_code, message]
-		log.info(JSONString);
+		//log.info(JSONString);
     	String[] decoded_details = new String[2];
     	try {
     		JSONParser jp = new JSONParser();
@@ -271,12 +273,12 @@ public class frontendImpl extends frontendPOA  {
     	for(Tuple<InetAddress, Integer, String> single_rm : received_rm) {
     		// getName is the equivalent of getResponseMessage
     		String raw_response = single_rm.getName().trim();
-			log.info("RAW FUCKING RESPONSE " + raw_response);
+			//log.info("RAW FUCKING RESPONSE " + raw_response);
 			Response rawResponse = new Response(raw_response);
-			log.info("FUCKING MESSAGE IS : " + rawResponse.getResponseDetails().getMessage());
+			//log.info("FUCKING MESSAGE IS : " + rawResponse.getResponseDetails().getMessage());
 //    		String replica_id = decoded_response[1];
     		String replica_id = rawResponse.getReplica_id();
-    		String message = rawResponse.getResponseDetails().getMessage();
+    		String message = rawResponse.getResponse_details().getMessage();
     		
     		Tuple<InetAddress, Integer, String> rm_info_name = new Tuple<InetAddress, Integer, String>(single_rm.getInetAddress(), single_rm.getPort(), replica_id);
     		received_rm_info.add(rm_info_name);
@@ -309,7 +311,7 @@ public class frontendImpl extends frontendPOA  {
         		// getName is the equivalent of getResponseMessage
         		String raw = rm.getName().trim();
         		Response rawResponse = new Response(raw);
-        		String msg = rawResponse.getResponseDetails().getMessage();
+        		String msg = rawResponse.getResponse_details().getMessage();
         		
         		if( ( !response_message.equals(msg) ) ) {
     	    		notify_rm(rm.getInetAddress(), rm.getPort(), "FAILED-RM", rawResponse.getReplica_id());
@@ -340,7 +342,7 @@ public class frontendImpl extends frontendPOA  {
 	    Logger logger = Logger.getLogger("frontend-log");
 	    FileHandler fh;
 	    try {
-	        fh = new FileHandler("C:\\Users\\Waqar's PC\\Downloads\\Sample Source Code  Java IDL (CORBA)-20201013\\Reference Book\\soen423-project\\bin\\frontend\\logs\\server\\" + frontend_id + ".log");
+	        fh = new FileHandler("C:\\Users\\Waqar's PC\\Downloads\\Sample Source Code  Java IDL (CORBA)-20201013\\Reference Book\\soen423-project\\bin\\frontend\\logs\\server\\hi" + ".log");
 	        logger.addHandler(fh);
 	        SimpleFormatter formatter = new SimpleFormatter();
 	        fh.setFormatter(formatter);

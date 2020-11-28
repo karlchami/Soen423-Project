@@ -21,37 +21,29 @@ import frontend.corba.*;
 
 public class ClientLauncher {
 	
-	public static frontend getFEInterface(ORB orb, String store) throws NotFound, CannotProceed, InvalidName, org.omg.CosNaming.NamingContextPackage.InvalidName {
+	public static frontend getFEInterface(ORB orb) throws NotFound, CannotProceed, InvalidName, org.omg.CosNaming.NamingContextPackage.InvalidName {
 		org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");  	 
     	NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
-    	frontend FE = frontendHelper.narrow(ncRef.resolve_str(store));
+    	frontend FE = frontendHelper.narrow(ncRef.resolve_str("FrontEnd"));
     	return FE;
 	}
-	
-	public static void initializeORB(String[] args, String store)  {
-		new Thread(new Runnable() {
-            @Override
-            public void run() {
-            	try {
-            		System.out.print(args[0]);
-            		ORB orb = ORB.init(args, null);
-    				POA rootPOA = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
-    				rootPOA.the_POAManager().activate();
-    				frontendImpl frontEnd = new frontendImpl(orb, store);
-					org.omg.CORBA.Object ref = rootPOA.servant_to_reference(frontEnd);
-					frontend href = frontendHelper.narrow(ref);
-					org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
-					NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
-					NameComponent path[] = ncRef.to_name(store);
-					ncRef.rebind(path, href);
-    		    	orb.run();
-            	}
-            	catch(Exception ex) {
-            		
-            	}
-            }
-            
-        }).start();
-		System.out.println("Frontend built");
+
+	public static void initializeORB(String[] args) {
+		try {
+			ORB orb = ORB.init(args, null);
+			POA rootPOA = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+			rootPOA.the_POAManager().activate();
+			frontendImpl frontEnd = new frontendImpl(orb);
+			org.omg.CORBA.Object ref = rootPOA.servant_to_reference(frontEnd);
+			frontend href = frontendHelper.narrow(ref);
+			org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+			NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+			NameComponent[] path = ncRef.to_name("FrontEnd");
+			ncRef.rebind(path, href);
+			orb.run();
+		}
+		catch(Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 }
