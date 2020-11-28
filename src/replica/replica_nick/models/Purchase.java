@@ -4,10 +4,10 @@ import java.time.LocalDate;
 
 public class Purchase {
     private String itemID;
-    private double price;
+    private int price;
     private LocalDate dateOfPurchase;
 
-    public Purchase(String itemID, double price, LocalDate dateOfPurchase) {
+    public Purchase(String itemID, int price, LocalDate dateOfPurchase) {
         this.itemID = itemID;
         this.price = price;
         this.dateOfPurchase = dateOfPurchase;
@@ -17,7 +17,7 @@ public class Purchase {
         return itemID;
     }
 
-    public double getPrice() {
+    public int getPrice() {
         return price;
     }
 

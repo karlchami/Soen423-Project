@@ -6,10 +6,7 @@ import com.google.gson.Gson;
 import org.json.simple.JSONObject;
 import replica.replica_nick.impl.StoreImpl;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 
 public class StoreAgent {
     private StoreImpl store;
@@ -62,7 +59,7 @@ public class StoreAgent {
                         String itemID = parameters.get("itemID").toString();
                         String itemName = parameters.get("itemName").toString();
                         int quantity = Integer.parseInt(parameters.get("quantity").toString());
-                        double price = Double.parseDouble(parameters.get("price").toString());
+                        int price = Integer.parseInt(parameters.get("price").toString());
                         String responseMessage = store.addItem(managerID, itemID, itemName, quantity, price);
                         System.out.print(responseMessage);
                         sendResponse(request, responseMessage);
@@ -166,6 +163,8 @@ public class StoreAgent {
 
             System.out.println(frontEndReply);
 
+        } catch (SocketTimeoutException e) {
+            // TODO: resend
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -204,9 +203,9 @@ public class StoreAgent {
             case "find":
                 return store.searchResults(params[1]);
             case "return":
-                return store.nonLocalReturn(params[1], params[2], Double.parseDouble(params[3]));
+                return store.nonLocalReturn(params[1], params[2], Integer.parseInt(params[3]));
             case "waitlist":
-                return store.nonLocalWaitList(params[1], params[2], Double.parseDouble(params[3]));
+                return store.nonLocalWaitList(params[1], params[2], Integer.parseInt(params[3]));
             case "addwaitlist":
                 return store.addToWaitList(params[1], params[2]);
             case "quantity":

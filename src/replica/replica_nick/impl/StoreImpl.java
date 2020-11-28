@@ -42,23 +42,23 @@ public class StoreImpl {
     // region Store Setup
 
     private void setDefaultValues() {
-        inventory.put(storePrefix + "1001", new Item("Laptop", 10, 599.99));
-        inventory.put(storePrefix + "1002", new Item("iPhone", 8, 899.99));
-        inventory.put(storePrefix + "1003", new Item("Monitor", 12, 1299.99));
-        inventory.put(storePrefix + "1004", new Item("Universal Remote", 18, 39.99));
-        inventory.put(storePrefix + "1005", new Item("32\" TV", 4, 299.99));
-        inventory.put(storePrefix + "1006", new Item("46\" TV", 6, 499.99));
-        inventory.put(storePrefix + "1007", new Item("60\" TV", 0, 999.99));
-        inventory.put(storePrefix + "1008", new Item("Earphones", 30, 19.99));
-        inventory.put(storePrefix + "1009", new Item("PlayStation", 5, 499.99));
-        inventory.put(storePrefix + "1010", new Item("USB Cable", 15, 24.99));
+        inventory.put(storePrefix + "1001", new Item("Laptop", 10, 600));
+        inventory.put(storePrefix + "1002", new Item("iPhone", 8, 1000));
+        inventory.put(storePrefix + "1003", new Item("Monitor", 12, 1300));
+        inventory.put(storePrefix + "1004", new Item("Universal Remote", 18, 40));
+        inventory.put(storePrefix + "1005", new Item("32\" TV", 4, 300));
+        inventory.put(storePrefix + "1006", new Item("46\" TV", 6, 500));
+        inventory.put(storePrefix + "1007", new Item("60\" TV", 0, 800));
+        inventory.put(storePrefix + "1008", new Item("Earphones", 30, 20));
+        inventory.put(storePrefix + "1009", new Item("PlayStation", 5, 500));
+        inventory.put(storePrefix + "1010", new Item("USB Cable", 15, 25));
     }
 
     // endregion
 
     // region Manager Actions
 
-    public synchronized String addItem(String managerID, String itemID, String itemName, int quantity, double price) {
+    public synchronized String addItem(String managerID, String itemID, String itemName, int quantity, int price) {
         String result;
 
         if (!managerID.substring(0, 2).equalsIgnoreCase(itemID.substring(0, 2))) {
@@ -131,7 +131,7 @@ public class StoreImpl {
     public synchronized String purchaseItem(String customerID, String itemID, String dateOfPurchase) {
         Customer customer = getCustomer(customerID);
         String itemPrefix = storePrefix(itemID);
-        double price = checkPrice(itemID);
+        int price = checkPrice(itemID);
 
         String result = purchaseCheck(customerID, itemID);
 
@@ -219,7 +219,7 @@ public class StoreImpl {
         }
 
         Customer customer = getCustomer(customerID);
-        double oldPrice = customer.findPurchase(oldItemID).getPrice();
+        int oldPrice = customer.findPurchase(oldItemID).getPrice();
 
         customer.increaseBalance(oldPrice);
         customer.resetLimit(oldItemID);
@@ -266,7 +266,7 @@ public class StoreImpl {
         Customer customer = getCustomer(customerID);
         String itemPrefix = storePrefix(itemID);
         int qty = checkQuantity(itemID);
-        double price = checkPrice(itemID);
+        int price = checkPrice(itemID);
 
         if (qty == -1 || price == -1) {
             result = customerID + " - Failed to purchase item " + itemID + ". There are no items with this ID.";
@@ -304,7 +304,7 @@ public class StoreImpl {
         return result;
     }
 
-    public synchronized String nonLocalReturn(String customerID, String itemID, double price) {
+    public synchronized String nonLocalReturn(String customerID, String itemID, int price) {
         String result;
         Item item = inventory.get(itemID);
 
@@ -400,7 +400,7 @@ public class StoreImpl {
         }
     }
 
-    public synchronized String nonLocalWaitList(String customerID, String itemID, double price) {
+    public synchronized String nonLocalWaitList(String customerID, String itemID, int price) {
         String result;
         Customer customer = getCustomer(customerID);
 
@@ -432,19 +432,19 @@ public class StoreImpl {
         return item != null ? Integer.toString(item.getQuantity()) : "-1";
     }
 
-    private synchronized double checkPrice(String itemID) {
+    private synchronized int checkPrice(String itemID) {
         String prefix = storePrefix(itemID);
         if (prefix.equals(storePrefix)) {
             Item item = inventory.get(itemID);
             return item != null ? item.getPrice() : -1;
         }
         String price = forwardRequest(prefix, "price_" + itemID);
-        return Double.parseDouble(price);
+        return Integer.parseInt(price);
     }
 
     public synchronized String getPrice(String itemID) {
         Item item = inventory.get(itemID);
-        return item != null ? Double.toString(item.getPrice()) : "-1";
+        return item != null ? Integer.toString(item.getPrice()) : "-1";
     }
 
     private String storePrefix(String id) {
