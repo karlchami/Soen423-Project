@@ -65,22 +65,19 @@ public class StoreImpl {
             result = "Failed to add item " + itemID + ". You can only add items to your own store.";
         } else if (inventory.containsKey(itemID)) {
             Item item = inventory.get(itemID);
-            if (item.getPrice() != price) {
-                result = "Failed to add item " + itemID + ". Price entered does not match existing price.";
-            } else if (!item.getName().equals(itemName)) {
+            if (!item.getName().equals(itemName)) {
                 inventory.get(itemID).addQuantity(quantity);
                 inventory.get(itemID).setName(itemName);
                 updateWaitList(itemID);
-                result = "Success. Added " + quantity + " units of item " + itemID + " to inventory. " +
-                        "Item name changed to \"" + itemName + "\".";
+                result = managerID + " - Success. Added " + quantity + " units of item " + itemID + " to inventory.";
             } else {
                 inventory.get(itemID).addQuantity(quantity);
                 updateWaitList(itemID);
-                result = "Success. Added " + quantity + " units of item " + itemID + " to inventory.";
+                result = managerID + " - Success. Added " + quantity + " units of item " + itemID + " to inventory.";
             }
         } else {
             inventory.put(itemID, new Item(itemName, quantity, price));
-            result = "Success. Added " + quantity + " units of NEW item " + itemID + " to inventory.";
+            result = managerID + " - Success. Added " + quantity + " units of NEW item " + itemID + " to inventory.";
         }
         logger.log(managerID, result);
         return result;
@@ -90,20 +87,20 @@ public class StoreImpl {
         String result;
 
         if (!managerID.substring(0, 2).equalsIgnoreCase(itemID.substring(0, 2))) {
-            result = "Failed to remove item " + itemID + ". You can only remove items from your own store.";
+            result = managerID + " - Failed to remove item " + itemID + ". You can only remove items from your own store.";
         } else if (inventory.containsKey(itemID)) {
             Item item = inventory.get(itemID);
             if (quantity == -1) {
                 inventory.remove(itemID);
-                result = "Success. Completely removed item " + itemID + " from inventory.";
+                result = managerID + " - Success. Completely removed item " + itemID + " from inventory.";
             } else if (item.getQuantity() >= quantity) {
                 item.removeQuantity(quantity);
-                result = "Success. Removed " + quantity + " units of item " + itemID + " from inventory.";
+                result = managerID + " - Success. Removed " + quantity + " units of item " + itemID + " from inventory.";
             } else {
-                result = "Failed to remove item " + itemID + ". Quantity entered must not exceed the current quantity in stock.";
+                result = managerID + " - Failed to remove item " + itemID + ". Quantity entered must not exceed the current quantity in stock.";
             }
         } else {
-            result = "Failed to remove item " + itemID + ". Item does not exist.";
+            result = managerID + " - Failed to remove item " + itemID + ". Item does not exist.";
         }
         logger.log(managerID, result);
         return result;
@@ -112,8 +109,16 @@ public class StoreImpl {
     public synchronized String listItemAvailability(String managerID) {
         StringBuilder itemList = new StringBuilder();
 
-        itemList.append("Here is a list of the items currently available at the ").append(storePrefix).append(" store:\n\n");
-        inventory.forEach((itemID, item) -> itemList.append(itemID).append("\t").append(item).append("\n"));
+        inventory.forEach((itemID, item) -> {
+            itemList.append(itemID)
+                    .append(",")
+                    .append(item.getName())
+                    .append(",")
+                    .append(item.getQuantity())
+                    .append(",")
+                    .append(item.getPrice())
+                    .append(";");
+        });
 
         logger.log(managerID, "Retrieved list of item availability for " + storePrefix + " store.");
         return itemList.toString();
@@ -138,7 +143,7 @@ public class StoreImpl {
         if (itemPrefix.equals(storePrefix)) {
             Item item = inventory.get(itemID);
             item.decrementQuantity();
-            result = "Success. You have purchased a " + item.getName() + " (" + itemID + ") for $" + price;
+            result = customerID + " - Success. You have purchased a " + item.getName() + " (" + itemID + ") for $" + price;
             logger.log(customerID, result);
         } else {
             result = forwardRequest(itemPrefix, "purchase_" + customerID + "_" + itemID);
@@ -152,7 +157,6 @@ public class StoreImpl {
     public synchronized String findItem(String customerID, String itemName) {
         StringBuilder results = new StringBuilder();
 
-        results.append("Here are the search results for \"").append(itemName).append("\":\n\n");
         results.append(searchResults(itemName));
 
         String requestMessage = "find_" + itemName;
@@ -187,9 +191,9 @@ public class StoreImpl {
             Item item = inventory.get(itemID);
             if (item != null) {
                 item.incrementQuantity();
-                result = "Success. You have returned a " + item.getName() + " (" + itemID + ") for $" + item.getPrice();
+                result = customerID + " - Success. You have returned a " + item.getName() + " (" + itemID + ") for $" + item.getPrice();
             } else {
-                result = "Success. You have returned item + " + itemID + " (discontinued) for $" + purchase.getPrice();
+                result = customerID + " - Success. You have returned item + " + itemID + " (discontinued) for $" + purchase.getPrice();
             }
             logger.log(customerID, result);
             updateWaitList(itemID);
@@ -209,7 +213,7 @@ public class StoreImpl {
         result = returnCheck(customerID, oldItemID, dateOfExchange);
 
         if (failed(result)) {
-            result = "Exchange failed. " + result;
+            result = customerID + " - Exchange failed. " + result;
             logger.log(customerID, result);
             return result;
         }
@@ -224,14 +228,14 @@ public class StoreImpl {
         customer.setLimit(oldItemID);
 
         if (failed(result)) {
-            result = "Exchange failed. " + result;
+            result = customerID + " - Exchange failed. " + result;
             logger.log(customerID, result);
             return result;
         }
 
         returnItem(customerID, oldItemID, dateOfExchange);
         purchaseItem(customerID, newItemID, dateOfExchange);
-        result = "Success. You have exchanged item " + oldItemID + " for item " + newItemID + ".";
+        result = customerID + " - Success. You have exchanged item " + oldItemID + " for item " + newItemID + ".";
         logger.log(customerID, result);
         return result;
     }
@@ -244,7 +248,14 @@ public class StoreImpl {
         StringBuilder results = new StringBuilder();
         inventory.forEach((itemID, item) -> {
             if (item.getName().equalsIgnoreCase(itemName)) {
-                results.append(itemID).append("\t").append(item).append("\n");
+                results.append(itemID)
+                        .append(",")
+                        .append(item.getName())
+                        .append(",")
+                        .append(item.getQuantity())
+                        .append(",")
+                        .append(item.getPrice())
+                        .append(";");
             }
         });
         return results.toString();
@@ -258,13 +269,13 @@ public class StoreImpl {
         double price = checkPrice(itemID);
 
         if (qty == -1 || price == -1) {
-            result = "Failed to purchase item " + itemID + ". There are no items with this ID.";
-        } else if (customer.getBalance() < price) {
-            result = "Failed to purchase item " + itemID + ". Insufficient funds.";
+            result = customerID + " - Failed to purchase item " + itemID + ". There are no items with this ID.";
         } else if (qty <= 0) {
-            result = "Failed to purchase item " + itemID + ". Item is out of stock.";
+            result = customerID + " - Failed to purchase item " + itemID + ". Item is out of stock.";
+        } else if (customer.getBalance() < price) {
+            result = customerID + " - Failed to purchase item " + itemID + ". Insufficient funds.";
         } else if (!itemPrefix.equals(storePrefix) && customer.isLimitReached(itemID)) {
-            result = "Failed to purchase item " + itemID + ". You have reached your 1 item limit for the " + itemPrefix + " store.";
+            result = customerID + " - Failed to purchase item " + itemID + ". You have reached your 1 item limit for the " + itemPrefix + " store.";
         } else {
             result = "Success";
         }
@@ -276,9 +287,9 @@ public class StoreImpl {
         Purchase purchase = getCustomer(customerID).findPurchase(itemID);
 
         if (purchase == null) {
-            result = "Failed to return item " + itemID + ". Could not find purchase.";
+            result = customerID + " - Failed to return item " + itemID + ". Could not find purchase.";
         } else if (purchase.getDateOfPurchase().isBefore(date(dateOfReturn).minusDays(30))) {
-            result = "Failed to return item " + itemID + ". You must return items within 30 days of purchase.";
+            result = customerID + " - Failed to return item " + itemID + ". You must return items within 30 days of purchase.";
         } else {
             return "Success";
         }
@@ -288,7 +299,7 @@ public class StoreImpl {
     public synchronized String nonLocalPurchase(String customerID, String itemID) {
         Item item = inventory.get(itemID);
         item.decrementQuantity();
-        String result = "Success. You have purchased a " + item.getName() + " (" + itemID + ") for $" + item.getPrice();
+        String result = customerID + " - Success. You have purchased a " + item.getName() + " (" + itemID + ") for $" + item.getPrice();
         logger.log(customerID, result);
         return result;
     }
@@ -299,9 +310,9 @@ public class StoreImpl {
 
         if (item != null) {
             item.incrementQuantity();
-            result = "Success. You have returned a " + item.getName() + " (" + itemID + ") for $" + item.getPrice();
+            result = customerID + " - Success. You have returned a " + item.getName() + " (" + itemID + ") for $" + item.getPrice();
         } else {
-            result = "Success. You have returned item " + itemID + " (discontinued) for $" + price;
+            result = customerID + " - Success. You have returned item " + itemID + " (discontinued) for $" + price;
         }
 
         Runnable task = () -> {
