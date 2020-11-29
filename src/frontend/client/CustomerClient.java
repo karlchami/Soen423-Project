@@ -1,7 +1,6 @@
 package frontend.client;
 
 import java.io.IOException;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -58,7 +57,7 @@ public class CustomerClient {
 
         }
         System.out.println("Enter Customer ID: ");
-        String IDNumber = in.promptUserID();
+        String IDNumber = in.promptID();
         String clientID = store.toString() + "U" + IDNumber;
         System.out.println("Customer ID: " + clientID);
 

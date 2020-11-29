@@ -1,7 +1,6 @@
 package frontend.client;
 
 import java.io.IOException;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -59,7 +58,7 @@ public class ManagerClient {
 
             }
             System.out.println("Enter Manager ID: ");
-            String IDNumber = in.promptUserID();
+            String IDNumber = in.promptID();
             String clientID = store.toString() + "M" + IDNumber;
             System.out.println("Manager ID: " + clientID);
 
@@ -83,7 +82,7 @@ public class ManagerClient {
                     case 1:
                         System.out.println("----ADD ITEM----");
                         System.out.println("Enter ID:");
-                        itemID = in.promptItemID();
+                        itemID = in.promptID();
                         System.out.println("Enter name:");
                         itemName = in.promptItemName();
                         System.out.println("Enter price:");
@@ -98,11 +97,11 @@ public class ManagerClient {
                     case 2:
                         System.out.println("----REMOVE ITEM----");
                         System.out.println("Enter ID:");
-                        itemID = in.promptItemID();
+                        itemID = in.promptID();
                         System.out.println("Enter quantity (enter -1 to completely remove item):");
                         quantity = in.promptRemoveQuantity();
                         //manager.logger.info("Manager ID "+ manager.managerID + " attempt to remove item: " + store + itemID);
-                        response = server.removeItem(manager.managerID, itemID, quantity);
+                        response = server.removeItem(manager.managerID, store + itemID, quantity);
                         System.out.println(response);
                         System.out.printf("%n");
                         break;

@@ -53,12 +53,12 @@ public class UserInput {
         return option;
     }
 
-    public String promptUserID() {
+    public String promptID() {
 //        System.out.println("Please enter your ID:");
         String userID = sc.nextLine();
 
         while (!validateUserIDNumber(userID)) {
-            System.out.println("Invalid user ID. Please enter a 4-digit number.");
+            System.out.println("Invalid ID. Please enter a 4-digit number.");
             userID = sc.nextLine();
         }
         return userID.toUpperCase();
