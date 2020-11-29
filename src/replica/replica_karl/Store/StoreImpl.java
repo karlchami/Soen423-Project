@@ -411,7 +411,7 @@ public class StoreImpl {
                     // Refund the customer
                     long current_balance = customer.getBalance();
                     customer.setBalance(current_balance + item_price);
-                    response = customerID + " - Success. You have returned a" + item_details[0] + " (" + itemID + ") for $" + item_price;
+                    response = customerID + " - Success. You have returned a " + item_details[0] + " (" + itemID + ") for $" + item_price;
                     logger.info(response.trim());
                 } else {
                     // If not valid receipt do not return item
@@ -437,7 +437,7 @@ public class StoreImpl {
                 int item_price = Integer.parseInt(item_details[2].trim());
                 long current_balance = customer.getBalance();
                 customer.setBalance(current_balance + (long) item_price);
-                response = customerID + " - Success. You have returned a" + item_details[0] + " (" + itemID + ") for $" + item_price;
+                response = customerID + " - Success. You have returned a " + item_details[0] + " (" + itemID + ") for $" + item_price;
                 logger.info(response);
             }
         }
