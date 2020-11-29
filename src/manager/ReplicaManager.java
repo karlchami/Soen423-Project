@@ -205,13 +205,13 @@ public class ReplicaManager {
             sentence = "R-" + sentence;
             if (dumbo.getStore().equals("QC")) {
                 System.out.println("Resent");;
-                System.out.println(sendUDP(3003, sentence));
+                System.out.println(sendNoReply(3003, sentence));
             }
             if (dumbo.getStore().equals("BC")) {
-                sendUDP(3002, sentence);
+                sendNoReply(3002, sentence);
             }
             if (dumbo.getStore().equals("ON")) {
-                sendUDP(3001, sentence);
+                sendNoReply(3001, sentence);
             }
         }
     }
