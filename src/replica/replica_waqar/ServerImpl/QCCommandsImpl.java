@@ -331,7 +331,6 @@ public class QCCommandsImpl {
 
     public String findItem(String customerID, String itemName) {
         try {
-            String itemID = getItemIDbyName(itemName);
             String localItem = sendUDP(2003, customerID, itemName, "findItem", 0, "");
             String ONItem = sendUDP(2001, customerID, itemName, "findItem", 0, "");
             String BCItem = sendUDP(2002, customerID, itemName, "findItem", 0, "");
@@ -347,8 +346,8 @@ public class QCCommandsImpl {
         return new String("");
     }
 
-    public String findLocalItem(String itemName) {
-        String itemID = getItemIDbyName(itemName);
+    public String findLocalItemX(String itemName) {
+        String itemID = getItemIDbyNameX(itemName);
         String localItem;
         try {
             itemID = "QC" + itemID;
@@ -362,7 +361,24 @@ public class QCCommandsImpl {
         return localItem;
     }
 
-    private String getItemIDbyName(String itemName) {
+    public String findLocalItem(String itemName) {
+        String[] itemIDs = getItemIDbyName(itemName);
+        StringBuilder results = new StringBuilder();
+        for (String id : itemIDs) {
+            String itemID = "QC" + id;
+            results.append(itemID)
+                    .append(",")
+                    .append(this.Stock.get(itemID).getItemName())
+                    .append(",")
+                    .append(this.Stock.get(itemID).getItemQty())
+                    .append(",")
+                    .append(this.Stock.get(itemID).getPrice())
+                    .append((";"));
+        }
+        return results.toString();
+    }
+
+    private String getItemIDbyNameX(String itemName) {
         for (String i : this.Stock.keySet()) {
             String itemID = "";
             if (this.Stock.get(i).getItemName().equals(itemName)) {
@@ -372,6 +388,17 @@ public class QCCommandsImpl {
         }
         return "404014";
     }
+
+    private String[] getItemIDbyName(String itemName) {
+        ArrayList<String> results = new ArrayList<>();
+        for (String i : this.Stock.keySet()) {
+            if (this.Stock.get(i).getItemName().equalsIgnoreCase(itemName)) {
+                results.add(this.Stock.get(i).getItemID());
+            }
+        }
+        return results.toArray(new String[0]);
+    }
+
 
     public boolean dealWithBudget(String customerId, String itemID) {
         try {

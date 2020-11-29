@@ -195,7 +195,7 @@ public class ReplicaManager {
     }
 
     private static void receiveFE() {
-        try (DatagramSocket socket = new DatagramSocket(6000)) {
+        try (DatagramSocket socket = new DatagramSocket(6001)) {
             while (true) {
                 byte[] buffer = new byte[1000];
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);

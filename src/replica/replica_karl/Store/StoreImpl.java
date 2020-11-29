@@ -304,7 +304,7 @@ public class StoreImpl {
         }
     }
 
-    public String LocalFindItem(String itemName) {
+    public String LocalFindItemX(String itemName) {
         String no_found_items = "";
         for (Map.Entry<String, String> entry : this.itemStore.entrySet()) {
             String name = entry.getValue().split(",")[0];
@@ -313,6 +313,17 @@ public class StoreImpl {
             }
         }
         return no_found_items;
+    }
+
+    public String LocalFindItem(String itemName) {
+        StringBuilder results = new StringBuilder();
+        for (Map.Entry<String, String> entry : this.itemStore.entrySet()) {
+            String name = entry.getValue().split(",")[0];
+            if (itemName.trim().equalsIgnoreCase(name)) {
+                results.append(entry.getKey()).append(",").append(entry.getValue()).append(";");
+            }
+        }
+        return results.toString();
     }
 
     public String findItem(String customerID, String itemName) {

@@ -398,8 +398,8 @@ public class BCCommandsImpl {
         return new String("No Stock at the BC Store");
     }
 
-    public String findLocalItem(String itemName) {
-        String itemID = getItemIDbyName(itemName);
+    public String findLocalItemX(String itemName) {
+        String itemID = getItemIDbyNameX(itemName);
         String localItem;
         try {
             itemID = "BC" + itemID;
@@ -412,7 +412,24 @@ public class BCCommandsImpl {
 
     }
 
-    private String getItemIDbyName(String itemName) {
+    public String findLocalItem(String itemName) {
+        String[] itemIDs = getItemIDbyName(itemName);
+        StringBuilder results = new StringBuilder();
+        for (String id : itemIDs) {
+            String itemID = "BC" + id;
+            results.append(itemID)
+                    .append(",")
+                    .append(this.Stock.get(itemID).getItemName())
+                    .append(",")
+                    .append(this.Stock.get(itemID).getItemQty())
+                    .append(",")
+                    .append(this.Stock.get(itemID).getPrice())
+                    .append((";"));
+        }
+        return results.toString();
+    }
+
+    private String getItemIDbyNameX(String itemName) {
         for (String i : this.Stock.keySet()) {
             if (this.Stock.get(i).getItemName().equals(itemName)) {
                 return this.Stock.get(i).getItemID();
@@ -420,6 +437,16 @@ public class BCCommandsImpl {
 
         }
         return "404014";
+    }
+
+    private String[] getItemIDbyName(String itemName) {
+        ArrayList<String> results = new ArrayList<>();
+        for (String i : this.Stock.keySet()) {
+            if (this.Stock.get(i).getItemName().equalsIgnoreCase(itemName)) {
+                results.add(this.Stock.get(i).getItemID());
+            }
+        }
+        return results.toArray(new String[0]);
     }
 
 
