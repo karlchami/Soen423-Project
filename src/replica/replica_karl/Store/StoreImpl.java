@@ -38,9 +38,9 @@ public class StoreImpl {
     public StoreImpl(Store store) throws IOException {
         super();
         this.store = store;
-        this.ports.put("QC", 3333);
-        this.ports.put("BC", 4444);
-        this.ports.put("ON", 7777);
+        this.ports.put("QC", 4001);
+        this.ports.put("BC", 4003);
+        this.ports.put("ON", 4002);
         this.logger = this.launchLogger();
         logger.info("Store server " + this.store.toString()+ " is now running.");
         if(this.store.toString().equals("QC")) {
@@ -62,7 +62,7 @@ public class StoreImpl {
         Logger logger = Logger.getLogger("ServerLog");
         FileHandler fh;
         try {
-            fh = new FileHandler("X:\\soen423-a3\\src\\logs\\server\\"+this.store.toString()+"_server.log");
+            fh = new FileHandler("C:\\Users\\k_chami\\Desktop\\soen423-project\\src\\replica\\replica_karl\\logs\\server\\"+this.store.toString()+"_server.log");
             logger.addHandler(fh);
             SimpleFormatter formatter = new SimpleFormatter();
             fh.setFormatter(formatter);
@@ -278,6 +278,7 @@ public class StoreImpl {
 	}
 
 	public String purchaseItem(String customerID, String itemID, String dateOfPurchase) {
+		this.addCustomer(customerID);
         String purchase_store = itemID.substring(0,2);
         Customer customer = this.Customers.get(customerID);
         String current_store = this.store.toString();
@@ -312,7 +313,7 @@ public class StoreImpl {
         for (Map.Entry<String, String> entry : this.itemStore.entrySet()) {
             String name = entry.getValue().split(",")[0];
             if (itemName.trim().equals(name)) {
-                return entry.getValue() + ";";
+                return entry.getKey() + "," + entry.getValue() + ";";
             }
         }
         return no_found_items;
@@ -389,6 +390,7 @@ public class StoreImpl {
     }
 
 	public String returnItem(String customerID, String itemID, String dateOfReturn) {
+		this.addCustomer(customerID);
 		String response = null;
         Customer customer = this.Customers.get(customerID);
         String item_store = itemID.substring(0,2); 
@@ -442,6 +444,7 @@ public class StoreImpl {
 	}
 
 	public String exchangeItem(String customerID, String newitemID, String oldItemID, String dateOfExchange) {
+		this.addCustomer(customerID);
 		String response;
         int oldItemPrice = 0;
         int newItemPrice = 0;
@@ -531,8 +534,10 @@ public class StoreImpl {
 	}
 	
 	public void addCustomer(String customerID) {
-        Customer customer = new Customer(customerID, this.store);
-        this.Customers.put(customerID, customer);
+		if(!this.Customers.containsKey(customerID)) {
+	        Customer customer = new Customer(customerID, this.store);
+	        this.Customers.put(customerID, customer);
+		}
 	}
 	
 	public void addManager(String managerID) {

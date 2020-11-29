@@ -10,6 +10,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -46,7 +47,7 @@ public class ReplicaManager {
         Runnable task = () -> {
             try {
                 QCServer.main(null);
-            } catch (IOException e) {
+            } catch (IOException | NumberFormatException | ParseException e) {
                 e.printStackTrace();
             }
         };
@@ -58,7 +59,7 @@ public class ReplicaManager {
         Runnable task = () -> {
             try {
                 ONServer.main(null);
-            } catch (IOException e) {
+            } catch (IOException | NumberFormatException | ParseException e) {
                 e.printStackTrace();
             }
         };
@@ -70,7 +71,7 @@ public class ReplicaManager {
         Runnable task = () -> {
             try {
                 BCServer.main(null);
-            } catch (IOException e) {
+            } catch (IOException | NumberFormatException | ParseException e) {
                 e.printStackTrace();
             }
         };
@@ -248,7 +249,7 @@ public class ReplicaManager {
             socket.setSoTimeout(2500);
 
             byte[] bytes = String.valueOf(seq).getBytes();
-            InetAddress hostName = InetAddress.getByName("localhost"); // REPLACE WITH ADDRESS OF SEQUENCER (WILL BE DIFFERENT HOST)
+            InetAddress hostName = InetAddress.getByName("132.205.95.146"); // REPLACE WITH ADDRESS OF SEQUENCER (WILL BE DIFFERENT HOST)
             DatagramPacket packet = new DatagramPacket(bytes, bytes.length, hostName, 4200);
             socket.send(packet);
 
