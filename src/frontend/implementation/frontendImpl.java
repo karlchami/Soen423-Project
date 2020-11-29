@@ -143,7 +143,7 @@ public class frontendImpl extends frontendPOA {
         String response_message;
 
         // Expected number of replies (RM info tuple size)
-        int reply_count = rm_info.size();
+        int reply_count = 0;
 
         // Holds info about RMs that send UDP back to FE, used for tracking responses
         ArrayList<Tuple<InetAddress, Integer, String>> received_rm = new ArrayList<>();
@@ -152,11 +152,13 @@ public class frontendImpl extends frontendPOA {
         boolean receive = true;
 
         try {
-			socket.setSoTimeout(12000);
+			socket.setSoTimeout(5000);
             while (receive) {
                 byte[] buffer = new byte[1000];
                 DatagramPacket response = new DatagramPacket(buffer, buffer.length);
                 socket.receive(response);
+
+                System.out.println(new String(response.getData(), 0, response.getLength()));
 
                 Tuple<InetAddress, Integer, String> rm = new Tuple<>(response.getAddress(), response.getPort(), new String(response.getData(), 0, response.getLength()));
 
@@ -168,7 +170,7 @@ public class frontendImpl extends frontendPOA {
                     // Sends back a reply to RM denoting that response is received
                     sendMessageNoReply("received-response", response.getAddress(), response.getPort());
                 }
-                if (reply_count == 1) { // change back to 3
+                if (reply_count == 3) { // change back to 3
                     receive = false;
                 }
             }
