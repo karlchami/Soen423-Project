@@ -46,13 +46,13 @@ public class StoreAgent {
                     socket.send(replyPacket);
                     continue;
                 }
-                if(message.equals("received-response")){
+                if (message.equals("received-response")) {
                     continue;
                 }
-                if(message.contains("FAILED")){
+                if (message.contains("FAILED")) {
                     continue;
                 }
-                if(message.contains("CRASHED")){
+                if (message.contains("CRASHED")) {
                     continue;
                 }
 

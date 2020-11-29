@@ -1,4 +1,5 @@
 package replica.replica_karl.backend;
+
 import replica.replica_karl.Store.StoreImpl;
 import replica.replica_karl.models.Store;
 import replica.replica_karl.backend.StoreAgent;
@@ -13,18 +14,18 @@ public class QCServer {
     public static void main(String[] args) throws IOException, NumberFormatException, ParseException {
         QCStoreImpl = new StoreImpl(Store.QC);
         Runnable task = () -> {
-			try {
-				QCStoreImpl.receive();
-			} catch (NumberFormatException | ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		};
+            try {
+                QCStoreImpl.receive();
+            } catch (NumberFormatException | ParseException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        };
         Thread thread = new Thread(task);
         thread.start();
         replica.replica_karl.backend.StoreAgent agent = new StoreAgent(QCStoreImpl, 4001, 4441);
         agent.run();
         System.out.println("QC server started...");
-}
+    }
 }
 
