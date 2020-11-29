@@ -109,8 +109,8 @@ public class StoreAgent {
 
                     case "exchangeItem":
                         customerID = parameters.get("customerID").toString();
-                        String newItemID = parameters.get("newitemID").toString();
-                        String oldItemID = parameters.get("olditemID").toString();
+                        String newItemID = parameters.get("newItemID").toString();
+                        String oldItemID = parameters.get("oldItemID").toString();
                         String dateOfExchange = parameters.get("dateOfExchange").toString();
 
                         responseMessage = store.exchangeItem(customerID, newItemID, oldItemID, dateOfExchange);
@@ -120,9 +120,7 @@ public class StoreAgent {
                     case "addCustomerWaitlist":
                         customerID = parameters.get("customerID").toString();
                         itemID = parameters.get("itemID").toString();
-
-                        responseMessage = store.addToWaitList(itemID, customerID);
-                        sendResponse(request, responseMessage);
+                        store.addToWaitList(itemID, customerID);
                         break;
                 }
             }

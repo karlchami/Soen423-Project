@@ -46,12 +46,19 @@ public class StoreImpl {
         inventory.put(storePrefix + "1002", new Item("iPhone", 8, 1000));
         inventory.put(storePrefix + "1003", new Item("Monitor", 12, 1300));
         inventory.put(storePrefix + "1004", new Item("Universal Remote", 18, 40));
-        inventory.put(storePrefix + "1005", new Item("32\" TV", 4, 300));
-        inventory.put(storePrefix + "1006", new Item("46\" TV", 6, 500));
-        inventory.put(storePrefix + "1007", new Item("60\" TV", 0, 800));
+        inventory.put(storePrefix + "1005", new Item("Toaster", 4, 300));
+        inventory.put(storePrefix + "1006", new Item("TV", 6, 500));
+        inventory.put(storePrefix + "1007", new Item("Dishwasher", 0, 800));
         inventory.put(storePrefix + "1008", new Item("Earphones", 30, 20));
         inventory.put(storePrefix + "1009", new Item("PlayStation", 5, 500));
         inventory.put(storePrefix + "1010", new Item("USB Cable", 15, 25));
+
+        if (storePrefix.equals("QC")) {
+            inventory.put(storePrefix + "6231", new Item("Tea", 2, 30));
+            inventory.put(storePrefix + "6651", new Item("Chocolates", 2, 30));
+        } else if (storePrefix.equals("ON")) {
+            inventory.put(storePrefix + "6231", new Item("Tea", 1, 10));
+        }
     }
 
     // endregion
