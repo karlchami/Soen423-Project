@@ -205,13 +205,13 @@ public class ReplicaManager {
             sentence = "R-" + sentence;
             if (dumbo.getStore().equals("QC")) {
                 System.out.println("Resent");;
-                System.out.println(sendNoReply(3003, sentence));
+                System.out.println(sendNoReply(3003, sentence, "localhost"));
             }
             if (dumbo.getStore().equals("BC")) {
-                sendNoReply(3002, sentence);
+                sendNoReply(3002, sentence, "localhost");
             }
             if (dumbo.getStore().equals("ON")) {
-                sendNoReply(3001, sentence);
+                sendNoReply(3001, sentence, "localhost");
             }
         }
     }
@@ -227,24 +227,24 @@ public class ReplicaManager {
             return;
         }
         received_commands.add(sentence);
-
+        System.out.println("Current Count : " + sequence_count + "\n Received Count : " + dumbo.getSequence_id());
         System.out.println("Executing : " + dumbo.getSequence_id());
         sequence_count++;
 
         if(dumbo.getStore().equals("QC")){
-            System.out.println(sendNoReply(3003, sentence));
+            System.out.println(sendNoReply(3003, sentence, "localhost"));
         }
         if(dumbo.getStore().equals("BC")){
-            sendNoReply(3002, sentence);
+            sendNoReply(3002, sentence, "localhost");
         }
         if(dumbo.getStore().equals("ON")){
-            sendNoReply(3001, sentence);
+            sendNoReply(3001, sentence, "localhost");
         }
     }
 
     private static void requestMissedPackets(int seq, int received_message_count) {
         for(int i=seq; i<received_message_count; i++){
-            String message = requestResend(i).trim();
+            String message = requestResend(i,"132.205.95.146").trim();
             if(message.equals("none")){
                 return;
             }
@@ -254,12 +254,12 @@ public class ReplicaManager {
 
     }
 
-    private static String requestResend(int seq) {
+    private static String requestResend(int seq, String host) {
         try (DatagramSocket socket = new DatagramSocket()) {
             socket.setSoTimeout(2500);
 
             byte[] bytes = String.valueOf(seq).getBytes();
-            InetAddress hostName = InetAddress.getByName("localhost"); // REPLACE WITH ADDRESS OF SEQUENCER (WILL BE DIFFERENT HOST)
+            InetAddress hostName = InetAddress.getByName(host); // REPLACE WITH ADDRESS OF SEQUENCER (WILL BE DIFFERENT HOST)
             DatagramPacket packet = new DatagramPacket(bytes, bytes.length, hostName, 4200);
             socket.send(packet);
 
@@ -302,7 +302,7 @@ public class ReplicaManager {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 socket.receive(request);
                 String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
-
+                System.out.println("RM received : " + sentence);
                 handleRequest(sentence);
 
             }
@@ -391,7 +391,7 @@ public class ReplicaManager {
 
     }
 
-    private static String sendNoReply(int port, String UDPMessage) {
+    private static String sendNoReply(int port, String UDPMessage, String host) {
         DatagramSocket socket = null;
         String result = "";
         try {
@@ -399,7 +399,7 @@ public class ReplicaManager {
             socket = new DatagramSocket();
             socket.setSoTimeout(2700);
             byte[] messageToSend = UDPMessage.getBytes();
-            InetAddress hostName = InetAddress.getByName("localhost");
+            InetAddress hostName = InetAddress.getByName(host);
             DatagramPacket request = new DatagramPacket(messageToSend, UDPMessage.length(), hostName, port);
             socket.send(request);
         } catch (Exception e) {
