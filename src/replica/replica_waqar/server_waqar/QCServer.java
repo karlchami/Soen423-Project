@@ -17,7 +17,7 @@ public class QCServer {
             QCCommandsImpl store = new QCCommandsImpl();
 
             Runnable task = () -> {
-                    receive(store);
+                receive(store);
             };
             Thread thread = new Thread(task);
             thread.start();
@@ -28,8 +28,8 @@ public class QCServer {
             Thread thread2 = new Thread(task2);
             thread2.start();
 
-           while(true){
-               Thread.sleep(2500);
+            while(true){
+                Thread.sleep(2500);
             }
         }
         catch (Exception e) {
@@ -100,7 +100,7 @@ public class QCServer {
         String returnMessage = "";
         int FEPort = 5555;
         try {
-            InetAddress FEHost = InetAddress.getByName("localhost");
+            InetAddress FEHost = InetAddress.getByName("132.205.95.146");
             RMsocket = new DatagramSocket(3003);
             byte[] buffer = new byte[1000];
             while (true) {
@@ -128,7 +128,7 @@ public class QCServer {
                             request.getPort());
                     RMsocket.send(reply);
                     RMsocket.close();
-                    return;
+                    continue;
                 }
                 if(sentence.equals("wipe")){
                     returnMessage = "TRUE";
@@ -137,11 +137,28 @@ public class QCServer {
                             request.getPort());
                     RMsocket.send(reply);
                     RMsocket.close();
-                    return;
+                    continue;
+                }
+                if(sentence.equals("received-response")){
+                    continue;
+                }
+                if(sentence.contains("FAILED")){
+                    continue;
+                }
+                if(sentence.contains("CRASHED")){
+                    continue;
                 }
 
+
                 String status_code = ""; // Will actually be set by parsing message
-                Request dumbo = new Request(sentence.split("-")[1]);
+                Request dumbo = null;
+                System.out.println(sentence);
+                if(sentence.contains("R-")) {
+                    dumbo = new Request(sentence.substring(2));
+                }else {
+                    dumbo = new Request(sentence);
+                }
+
 
                 if(dumbo.getRequest_details().getMethod_name().equals("addItem")){
                     returnMessage = obj.addItem(
@@ -154,8 +171,8 @@ public class QCServer {
                 if(dumbo.getRequest_details().getMethod_name().equals("exchangeItem")){
                     returnMessage = obj.exchangeLogic(
                             dumbo.getRequest_details().getParameters().get("customerID").toString(),
-                            dumbo.getRequest_details().getParameters().get("newitemID").toString(),
-                            dumbo.getRequest_details().getParameters().get("olditemID").toString(),
+                            dumbo.getRequest_details().getParameters().get("newItemID").toString(),
+                            dumbo.getRequest_details().getParameters().get("oldItemID").toString(),
                             dumbo.getRequest_details().getParameters().get("dateOfExchange").toString());
                 }
                 if(dumbo.getRequest_details().getMethod_name().equals("findItem")){
@@ -185,17 +202,21 @@ public class QCServer {
                             dumbo.getRequest_details().getParameters().get("itemID").toString(),
                             dumbo.getRequest_details().getParameters().get("dateOfReturn").toString());
                 }
+                if(dumbo.getRequest_details().getMethod_name().equals("addCustomerWaitlist")){
+                    continue;
+                }
+
                 Response response = new Response(String.valueOf(dumbo.getSequence_id()), "waqar",
                         dumbo.getRequest_details().getMethod_name(), returnMessage, status_code);
                 Gson gson = new Gson();
                 String json = gson.toJson(response);
                 if(!sentence.startsWith("R")) {
                     byte[] sendData = json.getBytes();
-                    DatagramPacket reply = new DatagramPacket(sendData, returnMessage.length(), FEHost,
+                    DatagramPacket reply = new DatagramPacket(sendData, sendData.length, FEHost,
                             FEPort);
                     RMsocket.send(reply);
                 }else{
-                    return;
+                    continue;
                 }
             }
         } catch (Exception e) {
