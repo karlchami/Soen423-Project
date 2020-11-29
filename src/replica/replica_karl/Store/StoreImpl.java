@@ -62,7 +62,7 @@ public class StoreImpl {
         Logger logger = Logger.getLogger("ServerLog");
         FileHandler fh;
         try {
-            fh = new FileHandler("C:\\Users\\k_chami\\Desktop\\soen423-project\\src\\replica\\replica_karl\\logs\\server\\" + this.store.toString() + "_server.log");
+            fh = new FileHandler("G:\\My Documents\\soen423-project\\src\\replica\\replica_karl\\logs\\server\\" + this.store.toString() + "_server.log");
             logger.addHandler(fh);
             SimpleFormatter formatter = new SimpleFormatter();
             fh.setFormatter(formatter);
@@ -226,7 +226,7 @@ public class StoreImpl {
                     item_details[1] = Integer.toString(current_quantity - 1);
                     itemStore.replace(itemID, String.join(",", item_details));
                     this.purchaseLog.add(itemID + "," + customerID + "," + dateOfPurchase);
-                    response = (customerID + " - Success. You have purchased " + itemID + " for $" + price).trim();
+                    response = (customerID + " - Success. You have purchased a " + item_details[0] + " (" + itemID + ") for $" + price).trim();
                     logger.info(response);
                     return "Success," + String.valueOf(remaining_balance) + "," + item_details[0] + "," + price;
                 } else {
@@ -294,7 +294,7 @@ public class StoreImpl {
                 String item_name = response.split(",")[2].trim();
                 String item_price = response.split(",")[3].trim();
                 customer.setBalance(remaining_balance);
-                response = (customerID + " - Success. You have purchased " + itemID + " for $" + item_price).trim();
+                response = (customerID + " - Success. You have purchased a " + item_name + " (" + itemID + ") for $" + item_price).trim();
             }
             return response;
         } else {
@@ -411,7 +411,7 @@ public class StoreImpl {
                     // Refund the customer
                     long current_balance = customer.getBalance();
                     customer.setBalance(current_balance + item_price);
-                    response = customerID + " - Success. You have returned " + itemID + " for $" + item_price;
+                    response = customerID + " - Success. You have returned a" + item_details[0] + " (" + itemID + ") for $" + item_price;
                     logger.info(response.trim());
                 } else {
                     // If not valid receipt do not return item
@@ -437,7 +437,7 @@ public class StoreImpl {
                 int item_price = Integer.parseInt(item_details[2].trim());
                 long current_balance = customer.getBalance();
                 customer.setBalance(current_balance + (long) item_price);
-                response = customerID + " - Success. You have returned " + itemID + " for $" + item_price;
+                response = customerID + " - Success. You have returned a" + item_details[0] + " (" + itemID + ") for $" + item_price;
                 logger.info(response);
             }
         }
