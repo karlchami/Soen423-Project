@@ -241,10 +241,26 @@ public class frontendImpl extends frontendPOA {
         return same_length && same_content;
     }
 
+    public String formatItemListMessage(String item_list){
+        String[] items = item_list.split(";");
+        String message = "";
+        for(String item : items){
+            String[] item_info = item.split(",");
+            String id = item_info[0];
+            String name = item_info[1];
+            String quantity = item_info[2];
+            String price = item_info[3];
+            message += "ID: " + id + ", Name: " + name + ", Qty: " + quantity + ", Price: " + price + "$ \n";
+        }
+        return message;
+        }
+
     // Compares JSON responses from different RMs and returns the 
     public String compareResponses(ArrayList<Tuple<InetAddress, Integer, String>> received_rm) {
         String response_message = null;
         int correct_responses = 0;
+        // If the response to be returned is in list form
+        boolean list_response = false;
 
         // To get the response message majority
         for (Tuple<InetAddress, Integer, String> rm : received_rm) {
@@ -254,6 +270,7 @@ public class frontendImpl extends frontendPOA {
             String method_name = response.getResponse_details().getMethod_name();
 
             if(method_name.equals("findItem") || method_name.equals("listItemAvailability")) {
+                list_response = true;
                 // Comparison logic for findItem and listItemAvailability
                 if (correct_responses == 0) {
                     response_message = message;
@@ -288,6 +305,10 @@ public class frontendImpl extends frontendPOA {
             }
         }
 
+        // Return formatted list message
+        if(list_response) {
+            return formatItemListMessage(response_message);
+        }
         return response_message;
     }
 
