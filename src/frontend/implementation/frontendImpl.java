@@ -1,8 +1,10 @@
 package frontend.implementation;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -231,6 +233,14 @@ public class frontendImpl extends frontendPOA {
         }
     }
 
+    public boolean compareItemLists(String item1, String item2){
+        String[] item1_array = item1.split(";");
+        String[] item2_array = item2.split(";");
+        boolean same_length = item1_array.length == item2_array.length;
+        boolean same_content = Arrays.asList(item1_array).containsAll(Arrays.asList(item2_array));
+        return same_length && same_content;
+    }
+
     // Compares JSON responses from different RMs and returns the 
     public String compareResponses(ArrayList<Tuple<InetAddress, Integer, String>> received_rm) {
         String response_message = null;
@@ -241,15 +251,28 @@ public class frontendImpl extends frontendPOA {
             // getName is the equivalent of getResponseMessage
             Response response = new Response(rm.getName());
             String message = response.getResponse_details().getMessage();
+            String method_name = response.getResponse_details().getMethod_name();
 
-            // Comparison logic
-            if (correct_responses == 0) {
-                response_message = message;
-                correct_responses++;
-            } else if (response_message.equals(message)) {
-                correct_responses++;
+            if(method_name.equals("findItem") || method_name.equals("listItemAvailability")) {
+                // Comparison logic for findItem and listItemAvailability
+                if (correct_responses == 0) {
+                    response_message = message;
+                    correct_responses++;
+                } else if (compareItemLists(response_message, message)) {
+                    correct_responses++;
+                } else {
+                    correct_responses--;
+                }
             } else {
-                correct_responses--;
+                // Comparison logic for all other methods
+                if (correct_responses == 0) {
+                    response_message = message;
+                    correct_responses++;
+                } else if (response_message.equals(message)) {
+                    correct_responses++;
+                } else {
+                    correct_responses--;
+                }
             }
 
         }
