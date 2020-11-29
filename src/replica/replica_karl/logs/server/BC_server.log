@@ -1,14 +1,4 @@
-Nov 28, 2020 5:22:51 PM Store.StoreImpl <init>
+Nov 28, 2020 10:36:15 PM replica.replica_karl.Store.StoreImpl <init>
+INFO: Store server ON is now running.
+Nov 28, 2020 10:36:15 PM replica.replica_karl.Store.StoreImpl <init>
 INFO: Store server BC is now running.
-Nov 28, 2020 5:24:27 PM Store.StoreImpl purchaseItem
-INFO: Customer BCU1234 purchasing an item in foreign store ON
-Nov 28, 2020 5:24:27 PM Store.StoreImpl purchaseItem
-INFO: Sending UDP command to ON store...
-Nov 28, 2020 5:24:40 PM Store.StoreImpl purchaseItem
-INFO: Customer BCU1234 purchasing an item in foreign store QC
-Nov 28, 2020 5:24:40 PM Store.StoreImpl purchaseItem
-INFO: Sending UDP command to QC store...
-Nov 28, 2020 5:25:21 PM Store.StoreImpl purchaseItem
-INFO: Customer BCU1234 purchasing an item in foreign store ON
-Nov 28, 2020 5:25:21 PM Store.StoreImpl purchaseItem
-INFO: Sending UDP command to ON store...

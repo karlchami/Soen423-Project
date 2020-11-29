@@ -46,6 +46,15 @@ public class StoreAgent {
                     socket.send(replyPacket);
                     continue;
                 }
+                if(message.equals("received-response")){
+                    continue;
+                }
+                if(message.contains("FAILED")){
+                    continue;
+                }
+                if(message.contains("CRASHED")){
+                    continue;
+                }
 
                 Request request = new Request(message);
                 JSONObject parameters = request.getRequest_details().getParameters();
@@ -106,8 +115,8 @@ public class StoreAgent {
 
                     case "exchangeItem":
                         customerID = parameters.get("customerID").toString();
-                        String newItemID = parameters.get("newitemID").toString();
-                        String oldItemID = parameters.get("olditemID").toString();
+                        String newItemID = parameters.get("newItemID").toString();
+                        String oldItemID = parameters.get("oldItemID").toString();
                         String dateOfExchange = parameters.get("dateOfExchange").toString();
 
                         responseMessage = store.exchangeItem(customerID, newItemID, oldItemID, dateOfExchange);
@@ -133,7 +142,7 @@ public class StoreAgent {
 
         Response response = new Response(
                 String.valueOf(request.getSequence_id()),
-                "nick",
+                "karl",
                 request.getRequest_details().getMethod_name(),
                 message,
                 statusCode
@@ -145,7 +154,7 @@ public class StoreAgent {
         try (DatagramSocket socket = new DatagramSocket()) {
             socket.setSoTimeout(4000);
 
-            InetAddress hostName = InetAddress.getByName("localhost"); // CHANGE TO FRONT-END HOST NAME
+            InetAddress hostName = InetAddress.getByName("132.205.95.146"); // CHANGE TO FRONT-END HOST NAME
 
             byte[] bytes = responseString.getBytes();
             System.out.println(responseString);
