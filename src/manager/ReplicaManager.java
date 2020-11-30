@@ -125,24 +125,27 @@ public class ReplicaManager {
     }
 
     public static void startAll() throws InterruptedException {
-        Thread.sleep(1500);
+        Thread.sleep(1000);
         startBC();
-        Thread.sleep(1500);
+        Thread.sleep(1000);
         startON();
-        Thread.sleep(1500);
+        Thread.sleep(1000);
         startQC();
     }
 
     public static void restartAll() throws InterruptedException {
-        Thread.sleep(1500);
+        Thread.sleep(750);
         endQCThread();
-        Thread.sleep(1500);
+        Thread.sleep(750);
         endBCThread();
-        Thread.sleep(1500);
+        Thread.sleep(750);
         endONThread();
         startAll();
-        Thread.sleep(3500);
+        Thread.sleep(2500);
         System.out.println("RESTARTED");
+        resendMessages();
+        Thread.sleep(1500);
+        System.out.println("Resent");
     }
 
     public static boolean heartbeat(String StorePrefix) {
@@ -199,22 +202,26 @@ public class ReplicaManager {
     }
 
     public static void resendMessages(){
-        for(int i=0; i<received_commands.size();i++) {
-            String sentence = received_commands.get(i);
-            Request dumbo = new Request(sentence);
-            sentence = "R-" + sentence;
-            if (dumbo.getStore().equals("QC")) {
-                System.out.println("Resent");;
-                System.out.println(sendNoReply(3003, sentence, "localhost"));
+        try {
+            for(int i=0; i<received_commands.size();i++) {
+                String sentence = received_commands.get(i);
+                Request dumbo = new Request(sentence);
+                sentence = "R-" + sentence;
+                Thread.sleep(1000);
+                if (dumbo.getStore().equals("QC")) {
+                    System.out.println("Resent");;
+                    System.out.println(sendNoReply(3003, sentence, "localhost"));
+                }
+                if (dumbo.getStore().equals("BC")) {
+                    sendNoReply(3002, sentence, "localhost");
+                }
+                if (dumbo.getStore().equals("ON")) {
+                    sendNoReply(3001, sentence, "localhost");
+                }
             }
-            if (dumbo.getStore().equals("BC")) {
-                sendNoReply(3002, sentence, "localhost");
-            }
-            if (dumbo.getStore().equals("ON")) {
-                sendNoReply(3001, sentence, "localhost");
-            }
-        }
+        }catch(Exception e) {}
     }
+
 
     public static void handleRequest(String sentence){
         Request dumbo = new Request(sentence);
@@ -291,7 +298,7 @@ public class ReplicaManager {
     }
 
 
-    private static void receive_multicast() {
+    private static void receive_multicast() { //Receive from Sequencer
         MulticastSocket socket = null;
         String returnMessage = "";
         try {
@@ -316,7 +323,7 @@ public class ReplicaManager {
     }
 
 
-    private static void receiveFE() {
+    private static void receiveFE() { //Not Used
         try (DatagramSocket socket = new MulticastSocket(6002);) {
             while (true) {
                 byte[] buffer = new byte[1000];
@@ -325,7 +332,8 @@ public class ReplicaManager {
 
                 String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
 
-                if (sentence.equals("restart")) {
+                if (sentence.contains("waqar,CRASHED")) {
+                    System.out.println("RESTARTING ALL - CRASH");
                     restartAll();
                 }
             }
@@ -334,7 +342,7 @@ public class ReplicaManager {
         }
     }
 
-    private static void receive() {
+    private static void receive() { // Receive from FE
         DatagramSocket socket = null;
         String returnMessage = "";
         try {
@@ -345,10 +353,16 @@ public class ReplicaManager {
                 socket.receive(request);
                 String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
                 System.out.println("Function Received " + sentence);
-                if (sentence.equals("restart")) {
+
+                if (sentence.contains("waqar,CRASHED")) {
+                    System.out.println("RESTARTING ALL - CRASH");
                     restartAll();
-                    resendMessages();
-                    returnMessage = "restarted";
+                    continue;
+                }
+                if (sentence.contains("waqar,FAILED,restart")) {
+                    System.out.println("RESTARTING ALL - Three Failures");
+                    restartAll();
+                    continue;
                 }
 
                 byte[] sendData = returnMessage.getBytes();

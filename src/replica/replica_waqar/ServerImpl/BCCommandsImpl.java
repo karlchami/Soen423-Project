@@ -64,8 +64,8 @@ public class BCCommandsImpl {
     public int emptyWaitlist(String itemId, int qty) {
         itemId = "BC" + itemId.substring(2, 6);
         try {
-            while (qty > 0 && !this.WaitList.get(itemId).isEmpty()) {
-                String satisfiedCustomer = (String) this.WaitList.get(itemId).poll();
+            while (qty > 0 && !WaitList.get(itemId).isEmpty()) {
+                String satisfiedCustomer = (String) WaitList.get(itemId).poll();
                 String logMessage = "\npurchaseItem Executed on waitlist item by " + satisfiedCustomer
                         + " | Modifications made to Server BC |\n " + "Updated Values \n ID | Qty \n" + itemId
                         + " | "
@@ -159,7 +159,7 @@ public class BCCommandsImpl {
                     writeLog(logMessage);
                     return stripNonValidXMLCharacters(QCItem);
                 }
-                if (QCItem.trim().equals("410") && ONItem.trim().equals("410") && locallyAvailable.trim().equals("410")) {
+                if (QCItem.trim().equals("41020") && ONItem.trim().equals("41020") && locallyAvailable.trim().equals("41020")) {
                     return customerID + " - Failed to purchase item " + itemID + ". There are no items with this ID.";
                 }
                 if (QCItem.startsWith("41010") || ONItem.startsWith("41010") || locallyAvailable.startsWith("41010")) {
@@ -205,7 +205,7 @@ public class BCCommandsImpl {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return ("410");
+        return ("41020");
     }
 
     public boolean firstShop(String customerId) {
@@ -344,10 +344,12 @@ public class BCCommandsImpl {
             if (qty == 0) {
                 removeLocalSale(customerID, itemID);
                 System.out.println("WAITLIST SALE!");
-                return customerID + " - Success. You have returned " + itemID + " for $" + this.Stock.get(itemID).getPrice();
+                return customerID + " - Success. You have returned a " + this.Stock.get(itemID).getItemName() + " (" + itemID + ")" + " for $"
+                        + this.Stock.get(itemID).getPrice();
             }
             this.Stock.get(itemID).setItemQty(this.Stock.get(itemID).getItemQty() + qty);
-            String returnMessage = customerID + " - Success. You have returned " + itemID + " for $" + this.Stock.get(itemID).getPrice();
+            String returnMessage = customerID + " - Success. You have returned a " + this.Stock.get(itemID).getItemName()
+                    + " (" + itemID + ")" + " for $" + this.Stock.get(itemID).getPrice();
             removeLocalSale(customerID, itemID);
             return returnMessage;
         } catch (Exception e) {
@@ -765,6 +767,7 @@ public class BCCommandsImpl {
         try {
             result = "";
             socket = new DatagramSocket();
+            socket.setSoTimeout(3500);
             byte[] messageToSend = UDPMessage.getBytes();
             InetAddress hostName = InetAddress.getByName("localhost");
             DatagramPacket request = new DatagramPacket(messageToSend, UDPMessage.length(), hostName, port);

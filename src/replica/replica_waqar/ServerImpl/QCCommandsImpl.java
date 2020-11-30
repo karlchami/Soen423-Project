@@ -35,8 +35,8 @@ public class QCCommandsImpl {
             this.foreignCustomers = new ArrayList<String>();
             this.Customers = new HashMap<>();
             this.Purchases = new ArrayList<Purchase>();
-            Stock.put("QC6231", new Item("6231", "Tea", "QC", 2, 30));
-            Stock.put("QC6651", new Item("6651", "Chocolates", "QC", 2, 30));
+//            Stock.put("QC6231", new Item("6231", "Tea", "QC", 2, 30));
+//            Stock.put("QC6651", new Item("6651", "Chocolates", "QC", 2, 30));
 
             Customers.put("QCU1001", new Customer());
             Customers.put("QCU1500", new Customer());
@@ -190,21 +190,26 @@ public class QCCommandsImpl {
     }
 
     synchronized public String purchaseLocalItem(String customerID, String itemID) {
-
-        if (enoughStock(itemID)) {
-            if (!dealWithBudget(customerID, itemID)) {
-                return customerID + " - Failed to purchase item " + itemID + ". Insufficient funds.";
+        try {
+            if (enoughStock(itemID)) {
+                boolean flag = !dealWithBudget(customerID, itemID);
+                if (flag) {
+                    return customerID + " - Failed to purchase item " + itemID + ". Insufficient funds.";
+                }
+                if (!firstShop(customerID))
+                    return "41010";
+                Stock.get(itemID).setItemQty(Stock.get(itemID).getItemQty() - 1);
+                Purchases.add(new Purchase(itemID, Stock.get(itemID).getPrice(), customerID));
+                String returnMessage = customerID + " - Success. You have purchased a " + Stock.get(itemID).getItemName()
+                        + " (" + itemID + ") for $" + Stock.get(itemID).getPrice();
+                return returnMessage;
+            } else {
+                return ("410");
             }
-            if (!firstShop(customerID))
-                return "41010";
-            Stock.get(itemID).setItemQty(Stock.get(itemID).getItemQty() - 1);
-            Purchases.add(new Purchase(itemID, Stock.get(itemID).getPrice(), customerID));
-            String returnMessage = customerID + " - Success. You have purchased a " + Stock.get(itemID).getItemName()
-                    + " (" + itemID + ") for $" + Stock.get(itemID).getPrice();
-            return returnMessage;
-        } else {
-            return ("410");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return ("41020");
     }
 
     public boolean firstShop(String customerId) {
@@ -272,12 +277,13 @@ public class QCCommandsImpl {
             qty = emptyWaitlist(itemID, qty);
             if (qty == 0) {
                 removeLocalSale(customerID, itemID);
-                return customerID + " - Success. You have returned " + itemID + " for $" + this.Stock.get(itemID).getPrice();
+                return customerID + " - Success. You have returned a " + this.Stock.get(itemID).getItemName()
+                        + " (" + itemID + ")" + " for $" + this.Stock.get(itemID).getPrice();
             }
             this.Stock.get(itemID).setItemQty(this.Stock.get(itemID).getItemQty() + qty);
 
-            String returnMessage = customerID + " - Success. You have returned " + itemID + " for $"
-                    + this.Stock.get(itemID).getPrice();
+            String returnMessage = customerID + " - Success. You have returned a " + this.Stock.get(itemID).getItemName()
+                    + " (" + itemID + ")" + " for $" + this.Stock.get(itemID).getPrice();
 
             System.out.println(returnMessage);
             removeLocalSale(customerID, itemID);
@@ -770,6 +776,7 @@ public class QCCommandsImpl {
         try {
             result = "";
             socket = new DatagramSocket();
+            socket.setSoTimeout(3500);
             byte[] messageToSend = UDPMessage.getBytes();
             InetAddress hostName = InetAddress.getByName("localhost");
             DatagramPacket request = new DatagramPacket(messageToSend, UDPMessage.length(), hostName, port);
