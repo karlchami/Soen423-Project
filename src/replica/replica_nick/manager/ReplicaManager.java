@@ -5,10 +5,7 @@ import replica.replica_nick.servers.BCServer;
 import replica.replica_nick.servers.ONServer;
 import replica.replica_nick.servers.QCServer;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -91,19 +88,20 @@ public class ReplicaManager {
 
         switch (storePrefix) {
             case "QC":
-                return sendUDP(5551, message).trim().equals(alive);
+                return sendUDP(5551, message).equals(alive);
             case "ON":
-                return sendUDP(5552, message).trim().equals(alive);
+                return sendUDP(5552, message).equals(alive);
             case "BC":
-                return sendUDP(5553, message).trim().equals(alive);
+                return sendUDP(5553, message).equals(alive);
             default:
                 return false;
         }
     }
 
-    private static void resendMessages() {
+    private static void resendMessages() throws InterruptedException {
         for (String request : received_commands) {
-            sendRequest(request);
+            sendRequest("x" + request);
+            Thread.sleep(100);
         }
     }
 
@@ -181,9 +179,14 @@ public class ReplicaManager {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 socket.receive(request);
 
-                String sentence = new String(request.getData(), request.getOffset(), request.getLength()).trim();
+                String message = new String(request.getData(), request.getOffset(), request.getLength()).trim();
+                System.out.println(message);
 
-                if (sentence.equals("restart")) {
+                if (message.contains("nick") && message.contains("CRASHED")) {
+                    if (!heartbeat("QC") || !heartbeat("ON") || !heartbeat("BC")) {
+                        restartAll();
+                    }
+                } else if (message.contains("nick") && message.contains("FAILED") && message.contains("restart")) {
                     restartAll();
                 }
             }
@@ -207,6 +210,9 @@ public class ReplicaManager {
 
             return new String(reply.getData(), 0, reply.getLength());
 
+        } catch (SocketTimeoutException e) {
+            System.out.println(e.getMessage());
+            return "";
         } catch (Exception e) {
             e.printStackTrace();
             return "";
