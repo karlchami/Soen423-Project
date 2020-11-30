@@ -41,9 +41,13 @@ public class StoreAgent {
                 String message = new String(packet.getData(), 0, packet.getLength());
 
                 if (message.equals("Exit")) {
-                    System.out.println("Killing " + store.getStorePrefix() + " Server (RM thread)");
+                    String reply = "Killing " + store.getStorePrefix() + " Server (RM thread)";
+                    byte[] bytes = reply.getBytes();
+                    DatagramPacket replyPacket = new DatagramPacket(bytes, bytes.length, packet.getAddress(), packet.getPort());
+                    socket.send(replyPacket);
+                    System.out.println(reply);
                     return;
-                } else if (message.equals("Heartbeart")) {
+                } else if (message.equals("Heartbeat")) {
                     String reply = "TRUE";
                     byte[] bytes = reply.getBytes();
                     DatagramPacket replyPacket = new DatagramPacket(bytes, bytes.length, packet.getAddress(), packet.getPort());
@@ -182,7 +186,7 @@ public class StoreAgent {
             System.out.println(frontEndReply);
 
         } catch (SocketTimeoutException e) {
-            // TODO: resend
+            System.out.println(e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -199,7 +203,11 @@ public class StoreAgent {
                 String requestMessage = new String(request.getData(), 0, request.getLength());
 
                 if (requestMessage.equals("Exit")) {
-                    System.out.println("Killing " + store.getStorePrefix() + " Server (store thread)");
+                    String reply = "Killing " + store.getStorePrefix() + " Server (store thread)";
+                    byte[] bytes = reply.getBytes();
+                    DatagramPacket replyPacket = new DatagramPacket(bytes, bytes.length, request.getAddress(), request.getPort());
+                    socket.send(replyPacket);
+                    System.out.println(reply);
                     return;
                 }
 

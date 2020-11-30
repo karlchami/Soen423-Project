@@ -584,7 +584,11 @@ public class StoreImpl {
                 aSocket.receive(request);
                 String[] requestArgs = new String(request.getData()).split(",");
                 if (requestArgs[0].trim().equals("Exit")) {
-                    System.out.print("Killing " + this.store.toString() + " Server (Store thread)");
+                    String reply = "Killing " + getStorePrefix() + " Server (store thread)";
+                    byte[] bytes = reply.getBytes();
+                    DatagramPacket replyPacket = new DatagramPacket(bytes, bytes.length, request.getAddress(), request.getPort());
+                    aSocket.send(replyPacket);
+                    System.out.println(reply);
                     return;
                 } else if (requestArgs[0].equals("PURCHASE-ITEM-FOREIGN")) {
                     String customerID = requestArgs[1];

@@ -114,7 +114,7 @@ public class ReplicaManager {
                 socket.receive(packet);
 
                 String message = new String(packet.getData(), packet.getOffset(), packet.getLength()).trim();
-                System.out.print(message);
+                System.out.println(message);
                 int seq = new Request(message).getSequence_id();
 
                 if (seq == nextSeq) {
@@ -158,7 +158,13 @@ public class ReplicaManager {
     }
 
     private static void sendRequest(String message) {
-        Request request = new Request(message);
+    	Request request = null;
+    	if (message.charAt(0) == 'x') {
+    		request = new Request(message.substring(1));
+    	}
+    	else {
+    		request = new Request(message);
+    	}
         switch (request.getStore()) {
             case "QC":
                 sendNoReply(5551, message);

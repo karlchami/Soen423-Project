@@ -38,9 +38,13 @@ public class StoreAgent {
                 String message = new String(packet.getData(), 0, packet.getLength());
 
                 if (message.equals("Exit")) {
-                    System.out.println("Killing " + store.getStorePrefix() + " Server (RM thread)");
+                    String reply = "Killing " + store.getStorePrefix() + " Server (RM thread)";
+                    byte[] bytes = reply.getBytes();
+                    DatagramPacket replyPacket = new DatagramPacket(bytes, bytes.length, packet.getAddress(), packet.getPort());
+                    socket.send(replyPacket);
+                    System.out.println(reply);
                     return;
-                } else if (message.equals("Heartbeart")) {
+                } else if (message.equals("Heartbeat")) {
                     String reply = "TRUE";
                     byte[] bytes = reply.getBytes();
                     DatagramPacket replyPacket = new DatagramPacket(bytes, bytes.length, packet.getAddress(), packet.getPort());
