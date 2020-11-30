@@ -178,7 +178,12 @@ public class ReplicaManager {
     }
 
     private static void sendRequest(String message) {
-        Request request = new Request(message);
+        Request request = null;
+        if (message.charAt(0) == 'x') {
+            request = new Request(message.substring(1));
+        } else {
+            request = new Request(message);
+        }
         switch (request.getStore()) {
             case "QC":
                 sendNoReply(4441, message);

@@ -44,12 +44,6 @@ public class StoreImpl {
         this.ports.put("ON", 4002);
         this.logger = this.launchLogger();
         logger.info("Store server " + this.store.toString() + " is now running.");
-        if (this.store.toString().equals("QC")) {
-            this.itemStore.put("QC6231", "Tea,2,30");
-            this.itemStore.put("QC6651", "Chocolates,2,30");
-        } else if (this.store.toString().equals("ON")) {
-            this.itemStore.put("ON6231", "Tea,1,10");
-        }
     }
 
     public String getStorePrefix() {
@@ -62,7 +56,7 @@ public class StoreImpl {
         Logger logger = Logger.getLogger("ServerLog");
         FileHandler fh;
         try {
-            fh = new FileHandler("G:\\My Documents\\soen423-project\\src\\replica\\replica_karl\\logs\\server\\" + this.store.toString() + "_server.log");
+            fh = new FileHandler("G:\\workspace\\soen423-project-new-dev\\src\\replica\\replica_karl\\logs\\server\\" + this.store.toString() + "_server.log");
             logger.addHandler(fh);
             SimpleFormatter formatter = new SimpleFormatter();
             fh.setFormatter(formatter);
@@ -589,7 +583,10 @@ public class StoreImpl {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
                 String[] requestArgs = new String(request.getData()).split(",");
-                if (requestArgs[0].equals("PURCHASE-ITEM-FOREIGN")) {
+                if (requestArgs[0].trim().equals("Exit")) {
+                    System.out.print("Killing " + this.store.toString() + " Server (Store thread)");
+                    return;
+                } else if (requestArgs[0].equals("PURCHASE-ITEM-FOREIGN")) {
                     String customerID = requestArgs[1];
                     int balance = Integer.parseInt(requestArgs[2]);
                     String itemID = requestArgs[3];
