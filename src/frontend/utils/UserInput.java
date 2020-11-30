@@ -157,7 +157,7 @@ public class UserInput {
     }
 
     public boolean promptWaitList() {
-        System.out.println("Would you like to be added to the wait list? (y/n)");
+        System.out.println("Would you like to be added to the waitlist? (y/n)");
         String response = sc.nextLine();
 
         while (!validateYesOrNo(response)) {

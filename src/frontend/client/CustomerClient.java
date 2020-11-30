@@ -87,17 +87,13 @@ public class CustomerClient {
                         System.out.println("Enter the date of purchase (dd-MM-yyyy):");
                         inputDate = in.promptDate();
                         response = server.purchaseItem(customer.customerID, itemID, inputDate);
+                        System.out.println(response);
 
                         if (response.contains("out of stock")) {
-                            System.out.println("Item is out of stock, waitlist?");
-                            String option = in.promptAny();
-                            if (option.equals("y")) {
-                                server.addCustomerWaitList(customer.customerID, itemID);
-                                System.out.println("Successfully waitlisted. Item will be automatically bought when available.");
+                            if (in.promptWaitList()) {
+                                response = server.addCustomerWaitList(customer.customerID, itemID);
+                                System.out.println(response);
                             }
-                        } else {
-                            //customer.logger.info(response);
-                            System.out.println(response);
                         }
                         break;
                     case 2:
