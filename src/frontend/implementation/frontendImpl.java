@@ -1,10 +1,10 @@
 package frontend.implementation;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -31,6 +31,7 @@ public class frontendImpl extends frontendPOA {
 
     // Stores RM info
     private ArrayList<Tuple<InetAddress, Integer, String>> rm_info = new ArrayList<>();
+    private HashMap<String, Integer> fail_count = new HashMap<>();
     private static int delay;
 
     public frontendImpl(ORB orb) throws IOException {
@@ -43,14 +44,19 @@ public class frontendImpl extends frontendPOA {
 
         // Add RM info to tuple
         // TODO: Replace below with proper Addresses and Ports
-        InetAddress karl_host = InetAddress.getByName("");
-        InetAddress waqar_host = InetAddress.getByName("");
-        InetAddress nick_host = InetAddress.getByName("");
-        rm_info.add(new Tuple<>(karl_host, 60001, "karl"));
+        InetAddress karl_host = InetAddress.getByName("132.205.95.150");
+        InetAddress waqar_host = InetAddress.getByName("132.205.95.115");
+        InetAddress nick_host = InetAddress.getByName("132.205.95.146");
+        rm_info.add(new Tuple<>(karl_host, 6001, "karl"));
         rm_info.add(new Tuple<>(waqar_host, 2020, "waqar"));
         rm_info.add(new Tuple<>(nick_host, 6000, "nick"));
         // Set response delay (for reliable UDP) in milliseconds
         delay = 1000;
+
+        fail_count.put("karl", 0);
+        fail_count.put("waqar", 0);
+        fail_count.put("nick", 0);
+
 
 //        log = startLogger();
 //        log.info("Frontend started on port " + port);
@@ -65,7 +71,7 @@ public class frontendImpl extends frontendPOA {
         Scanner sc = new Scanner(System.in);
         System.out.println("Please choose a mode:\n" +
                 "1. Software Failure\n" +
-                "2. Process Crash\n");
+                "2. Process Crash");
 
         String mode = sc.nextLine();
 
@@ -124,7 +130,7 @@ public class frontendImpl extends frontendPOA {
     public String addCustomerWaitList(String customerID, String itemID) {
         String request = RequestBuilder.addCustomerWaitListRequest(customerID, itemID);
         sendRequest(request, sequencer_address, sequencer_port);
-        return receive();
+        return "Successfully waitlisted. Item " + itemID + " will be automatically purchased when available.";
     }
 
     public static void sendRequest(String message, InetAddress inet_address, int port) {
@@ -200,17 +206,21 @@ public class frontendImpl extends frontendPOA {
             // Compares RM responses and returns the correct answer
             if (failureMode) {
                 return compareResponses(received_rm);
+            } else {
+                return response(received_rm);
             }
-
-            // This line should never run.
-            // If on crash mode, the catch SocketTimeoutException should return.
-            // If on failure mode, the if statement above should return.
-            return new Response(received_rm.get(0).getName()).getResponse_details().getMessage();
 
         } catch (SocketTimeoutException e) {
             System.out.println("Socket timed out after receiving " + reply_count + " messages.");
             handleCrash(received_rm);
-            return new Response(received_rm.get(0).getName()).getResponse_details().getMessage();
+            Response response = new Response(received_rm.get(0).getName());
+            String message = response.getResponse_details().getMessage();
+            String method = response.getResponse_details().getMethod_name();
+            if (method.equals("findItem") || method.equals("listItemAvailability")) {
+                return formatItemListMessage(message);
+            } else {
+                return message;
+            }
         } catch (IOException e) {
             e.printStackTrace();
             return "An error occurred.";
@@ -221,19 +231,21 @@ public class frontendImpl extends frontendPOA {
         // Detect crashed RMs aka RMs that didn't reply
         if (received_rm.size() < 3) {
             // Take a copy of RM arraylist
-            ArrayList<Tuple<InetAddress, Integer, String>> crashed_rms = new ArrayList<>(rm_info);
+            ArrayList<String> crashed_rms = new ArrayList<>();
+            crashed_rms.add("karl");
+            crashed_rms.add("waqar");
+            crashed_rms.add("nick");
 
             for (Tuple<InetAddress, Integer, String> rm : received_rm) {
-                String replica_id = new Response(rm.getName()).getReplica_id();
-                crashed_rms.remove(new Tuple<>(rm.getInetAddress(), rm.getPort(), replica_id));
+                crashed_rms.remove(new Response(rm.getName()).getReplica_id());
             }
-            for (Tuple<InetAddress, Integer, String> rm : crashed_rms) {
-                notify_rm(rm.getInetAddress(), rm.getPort(), "CRASHED", rm.getName());
+            for (String replica_id : crashed_rms) {
+                notify_rm("CRASHED", replica_id);
             }
         }
     }
 
-    public boolean compareItemLists(String item1, String item2){
+    public boolean compareItemLists(String item1, String item2) {
         String[] item1_array = item1.split(";");
         String[] item2_array = item2.split(";");
         boolean same_length = item1_array.length == item2_array.length;
@@ -241,10 +253,13 @@ public class frontendImpl extends frontendPOA {
         return same_length && same_content;
     }
 
-    public String formatItemListMessage(String item_list){
+    public String formatItemListMessage(String item_list) {
+        if (item_list.equals("")) {
+            return item_list;
+        }
         String[] items = item_list.split(";");
         String message = "";
-        for(String item : items){
+        for (String item : items) {
             String[] item_info = item.split(",");
             String id = item_info[0];
             String name = item_info[1];
@@ -253,7 +268,7 @@ public class frontendImpl extends frontendPOA {
             message += "ID: " + id + ", Name: " + name + ", Qty: " + quantity + ", Price: " + price + "$ \n";
         }
         return message;
-        }
+    }
 
     // Compares JSON responses from different RMs and returns the 
     public String compareResponses(ArrayList<Tuple<InetAddress, Integer, String>> received_rm) {
@@ -269,7 +284,7 @@ public class frontendImpl extends frontendPOA {
             String message = response.getResponse_details().getMessage();
             String method_name = response.getResponse_details().getMethod_name();
 
-            if(method_name.equals("findItem") || method_name.equals("listItemAvailability")) {
+            if (method_name.equals("findItem") || method_name.equals("listItemAvailability")) {
                 list_response = true;
                 // Comparison logic for findItem and listItemAvailability
                 if (correct_responses == 0) {
@@ -298,25 +313,42 @@ public class frontendImpl extends frontendPOA {
         for (Tuple<InetAddress, Integer, String> rm : received_rm) {
             // getName is the equivalent of getResponseMessage
             Response response = new Response(rm.getName());
+            String replica_id = response.getReplica_id();
             String message = response.getResponse_details().getMessage();
+            String method = response.getResponse_details().getMethod_name();
 
-            if ((!response_message.equals(message))) {
-                notify_rm(rm.getInetAddress(), rm.getPort(), "FAILED", response.getReplica_id());
+            if ((method.equals("findItem") || method.equals("listItemAvailability")) && !compareItemLists(message, response_message)) {
+                fail_count.put(replica_id, fail_count.get(replica_id) + 1);
+                notify_rm("FAILED", response.getReplica_id());
+            } else if (!method.equals("findItem") && !method.equals("listItemAvailability") && !response_message.equals(message)) {
+                fail_count.put(replica_id, fail_count.get(replica_id) + 1);
+                notify_rm("FAILED", response.getReplica_id());
+            } else {
+                fail_count.put(replica_id, 0);
+            }
+
+            if (fail_count.get(replica_id) > 2) {
+                notify_rm("FAILED,restart", response.getReplica_id());
+                fail_count.put(replica_id, 0);
             }
         }
 
         // Return formatted list message
-        if(list_response) {
+        if (list_response) {
             return formatItemListMessage(response_message);
         }
         return response_message;
     }
 
+    private String response(ArrayList<Tuple<InetAddress, Integer, String>> received_rm) {
+        return compareResponses(received_rm);
+    }
+
     // Notifies all RMs in multicast about a single RM failure
-    private void notify_rm(InetAddress address, int port, String status, String replica_name) {
+    private void notify_rm(String status, String replica_name) {
         for (Tuple<InetAddress, Integer, String> rm : rm_info) {
-            String message = replica_name + "," + status + "," + address + "," + port;
-            new Thread(() -> sendRequest(message, rm.getInetAddress(), rm.getPort())).start();
+            String message = replica_name + "," + status;
+            new Thread(() -> sendMessageNoReply(message, rm.getInetAddress(), rm.getPort())).start();
         }
     }
 
