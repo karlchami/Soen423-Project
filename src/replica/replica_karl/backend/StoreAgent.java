@@ -33,6 +33,7 @@ public class StoreAgent {
                 byte[] buffer = new byte[1000];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
+                boolean respond = true;
 
                 String message = new String(packet.getData(), 0, packet.getLength());
 
@@ -55,6 +56,10 @@ public class StoreAgent {
                 if (message.contains("CRASHED")) {
                     continue;
                 }
+                if (message.charAt(0) == 'x') {
+                    message = message.substring(1);
+                    respond = false;
+                }
 
                 Request request = new Request(message);
                 JSONObject parameters = request.getRequest_details().getParameters();
@@ -67,8 +72,9 @@ public class StoreAgent {
                         int quantity = Integer.parseInt(parameters.get("quantity").toString());
                         int price = Integer.parseInt(parameters.get("price").toString());
                         String responseMessage = store.addItem(managerID, itemID, itemName, quantity, price);
-                        System.out.print(responseMessage);
-                        sendResponse(request, responseMessage);
+                        if (respond) {
+                            sendResponse(request, responseMessage);
+                        }
                         break;
 
                     case "removeItem":
@@ -77,14 +83,18 @@ public class StoreAgent {
                         quantity = Integer.parseInt(parameters.get("quantity").toString());
 
                         responseMessage = store.removeItem(managerID, itemID, quantity);
-                        sendResponse(request, responseMessage);
+                        if (respond) {
+                            sendResponse(request, responseMessage);
+                        }
                         break;
 
                     case "listItemAvailability":
                         managerID = parameters.get("managerID").toString();
 
                         responseMessage = store.listItemAvailability(managerID);
-                        sendResponse(request, responseMessage);
+                        if (respond) {
+                            sendResponse(request, responseMessage);
+                        }
                         break;
 
                     case "purchaseItem":
@@ -93,7 +103,9 @@ public class StoreAgent {
                         String dateOfPurchase = parameters.get("dateOfPurchase").toString();
 
                         responseMessage = store.purchaseItem(customerID, itemID, dateOfPurchase);
-                        sendResponse(request, responseMessage);
+                        if (respond) {
+                            sendResponse(request, responseMessage);
+                        }
                         break;
 
                     case "findItem":
@@ -101,7 +113,9 @@ public class StoreAgent {
                         itemName = parameters.get("itemName").toString();
 
                         responseMessage = store.findItem(customerID, itemName);
-                        sendResponse(request, responseMessage);
+                        if (respond) {
+                            sendResponse(request, responseMessage);
+                        }
                         break;
 
                     case "returnItem":
@@ -110,7 +124,9 @@ public class StoreAgent {
                         String dateOfReturn = parameters.get("dateOfReturn").toString();
 
                         responseMessage = store.returnItem(customerID, itemID, dateOfReturn);
-                        sendResponse(request, responseMessage);
+                        if (respond) {
+                            sendResponse(request, responseMessage);
+                        }
                         break;
 
                     case "exchangeItem":
@@ -120,7 +136,9 @@ public class StoreAgent {
                         String dateOfExchange = parameters.get("dateOfExchange").toString();
 
                         responseMessage = store.exchangeItem(customerID, newItemID, oldItemID, dateOfExchange);
-                        sendResponse(request, responseMessage);
+                        if (respond) {
+                            sendResponse(request, responseMessage);
+                        }
                         break;
 
                     case "addCustomerWaitlist":
@@ -138,7 +156,7 @@ public class StoreAgent {
     }
 
     private void sendResponse(Request request, String message) {
-        String statusCode = "Success"; // parse from message
+        String statusCode = message.contains("Failed") ? "Failed" : "Success";
 
         Response response = new Response(
                 String.valueOf(request.getSequence_id()),
