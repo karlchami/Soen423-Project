@@ -43,10 +43,10 @@ public class frontendImpl extends frontendPOA {
         this.socket = new DatagramSocket(port);
 
         // Add RM info to tuple
-        // TODO: Replace below with proper Addresses and Ports
-        InetAddress karl_host = InetAddress.getByName("132.205.95.150");
+        InetAddress karl_host = InetAddress.getByName("132.205.95.111");
         InetAddress waqar_host = InetAddress.getByName("132.205.95.115");
         InetAddress nick_host = InetAddress.getByName("132.205.95.146");
+
         rm_info.add(new Tuple<>(karl_host, 6001, "karl"));
         rm_info.add(new Tuple<>(waqar_host, 2020, "waqar"));
         rm_info.add(new Tuple<>(nick_host, 6000, "nick"));
@@ -64,6 +64,11 @@ public class frontendImpl extends frontendPOA {
 
     public static void main(String[] args) {
         selectMode();
+        if (failureMode) {
+            System.out.println("mode: software failure");
+        } else {
+            System.out.println("mode: process crash");
+        }
         ClientLauncher.initializeORB(args);
     }
 
@@ -327,7 +332,7 @@ public class frontendImpl extends frontendPOA {
                 fail_count.put(replica_id, 0);
             }
 
-            if (fail_count.get(replica_id) > 2) {
+            if (fail_count.get(replica_id) > 2 && failureMode) {
                 notify_rm("FAILED,restart", response.getReplica_id());
                 fail_count.put(replica_id, 0);
             }
