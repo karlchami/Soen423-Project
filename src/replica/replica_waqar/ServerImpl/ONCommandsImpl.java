@@ -37,7 +37,7 @@ public class ONCommandsImpl {
             this.Customers = new HashMap<>();
             this.foreignCustomers = new ArrayList<String>();
             this.Purchases = new ArrayList<Purchase>();
-            Stock.put("ON6231", new Item("6231", "Tea", "ON", 1, 10));
+//            Stock.put("ON6231", new Item("6231", "Tea", "ON", 1, 10));
             Customers.put("ONU1001", new Customer());
             Customers.put("ONU1500", new Customer());
 

@@ -53,12 +53,13 @@ public class StoreImpl {
 //        inventory.put(storePrefix + "1009", new Item("PlayStation", 5, 500));
 //        inventory.put(storePrefix + "1010", new Item("USB Cable", 15, 25));
 
-        if (storePrefix.equals("QC")) {
-            inventory.put(storePrefix + "6231", new Item("Tea", 2, 30));
-            inventory.put(storePrefix + "6651", new Item("Chocolates", 2, 30));
-        } else if (storePrefix.equals("ON")) {
-            inventory.put(storePrefix + "6231", new Item("Tea", 1, 10));
-        }
+//        if (storePrefix.equals("QC")) {
+//            inventory.put(storePrefix + "6231", new Item("Tea", 2, 30));
+//            inventory.put(storePrefix + "6651", new Item("Chocolates", 2, 30));
+//        } else if (storePrefix.equals("ON")) {
+//            inventory.put(storePrefix + "6231", new Item("Tea", 1, 10));
+//            inventory.put(storePrefix + "7000", new Item("Dice Set", 10, 25));
+//        }
     }
 
     // endregion
