@@ -1,6 +1,3 @@
 /frontend/
+/Models/
 /replica/
-/sequencer/
-/tests/
-/udp/
-/replica-manager/
